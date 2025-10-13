@@ -4915,7 +4915,7 @@ public:
         }
     }
 
-    void Creature_SelectLevel(const CreatureTemplate* /* cinfo */, Creature* creature) override
+    void OnCreatureSelectLevel(const CreatureTemplate* /* cinfo */, Creature* creature) override
     {
         // ensure we're in a dungeon with a creature
         if (
@@ -4936,7 +4936,7 @@ public:
         {
             LOG_DEBUG("module.AutoBalance", "AutoBalance:: {}", SPACER);
 
-            LOG_DEBUG("module.AutoBalance", "AutoBalance_AllCreatureScript::Creature_SelectLevel: Creature {} ({}) | Entry ID: ({}) | Spawn ID: ({})",
+            LOG_DEBUG("module.AutoBalance", "AutoBalance_AllCreatureScript::OnCreatureSelectLevel: Creature {} ({}) | Entry ID: ({}) | Spawn ID: ({})",
                         creature->GetName(),
                         creature->GetLevel(),
                         creature->GetEntry(),
@@ -4945,7 +4945,7 @@ public:
 
             if (creatureABInfo->isBrandNew)
             {
-                LOG_DEBUG("module.AutoBalance", "AutoBalance_AllCreatureScript::Creature_SelectLevel: Creature {} ({}) | is no longer brand new.",
+                LOG_DEBUG("module.AutoBalance", "AutoBalance_AllCreatureScript::OnCreatureSelectLevel: Creature {} ({}) | is no longer brand new.",
                             creature->GetName(),
                             creature->GetLevel()
                 );
@@ -4964,7 +4964,7 @@ public:
 
             if (creature->GetLevel() != creatureABInfo->selectedLevel && isCreatureRelevant(creature))
             {
-                LOG_DEBUG("module.AutoBalance", "AutoBalance_AllCreatureScript::Creature_SelectLevel: Creature {} ({}) | is set to level ({}).",
+                LOG_DEBUG("module.AutoBalance", "AutoBalance_AllCreatureScript::OnCreatureSelectLevel: Creature {} ({}) | is set to level ({}).",
                             creature->GetName(),
                             creature->GetLevel(),
                             creatureABInfo->selectedLevel
@@ -4974,7 +4974,7 @@ public:
         }
         else
         {
-            LOG_ERROR("module.AutoBalance", "AutoBalance_AllCreatureScript::Creature_SelectLevel: Creature {} ({}) | is new to the instance but wasn't flagged as brand new. Please open an issue.",
+            LOG_ERROR("module.AutoBalance", "AutoBalance_AllCreatureScript::OnCreatureSelectLevel: Creature {} ({}) | is new to the instance but wasn't flagged as brand new. Please open an issue.",
                         creature->GetName(),
                         creature->GetLevel()
             );
