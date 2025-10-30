@@ -3,16 +3,16 @@
 #
 # Logging
 #
-# Add these lines to your worldserver.conf file to enable logging for AutoBalance.
+# Add these lines to your worldserver.conf file to enable logging for DungeonScale.
 # Be sure to add them after the `Logger.module=4,Console Server` line.
 #
 # 4 = Info (Default), 5 = Debug
 #
 ##########################
-# Logger.module.AutoBalance=4,Console Server
-# Logger.module.AutoBalance_CombatLocking=4,Console Server
-# Logger.module.AutoBalance_DamageHealingCC=4,Console Server
-# Logger.module.AutoBalance_StatGeneration=4,Console Server
+# Logger.module.DungeonScale=4,Console Server
+# Logger.module.DungeonScale_CombatLocking=4,Console Server
+# Logger.module.DungeonScale_DamageHealingCC=4,Console Server
+# Logger.module.DungeonScale_StatGeneration=4,Console Server
 
 ##########################
 #
@@ -21,43 +21,43 @@
 ##########################
 
 #
-#     AutoBalance.Enable
+#     DungeonScale.Enable
 #        Enable/Disable all features globally. If this setting is off, all settings after this one do not take effect.
 #        Default:     1 (1 = ON, 0 = OFF)
-AutoBalance.Enable.Global=1
+DungeonScale.Enable.Global=1
 
 #
-#     AutoBalance.Enabled.*
+#     DungeonScale.Enabled.*
 #        Enable/Disable all features for each instance size and difficulty.
 #        If an instance size is set to 0 here, none of the other settings for that instance size will take effect.
 #        Default:     1 (1 = ON, 0 = OFF)
 #
-AutoBalance.Enable.5M=1
-AutoBalance.Enable.10M=1
-AutoBalance.Enable.15M=1
-AutoBalance.Enable.20M=1
-AutoBalance.Enable.25M=1
-AutoBalance.Enable.40M=1
-AutoBalance.Enable.OtherNormal=1
+DungeonScale.Enable.5M=1
+DungeonScale.Enable.10M=1
+DungeonScale.Enable.15M=1
+DungeonScale.Enable.20M=1
+DungeonScale.Enable.25M=1
+DungeonScale.Enable.40M=1
+DungeonScale.Enable.OtherNormal=1
 
-AutoBalance.Enable.5MHeroic=1
-AutoBalance.Enable.10MHeroic=1
-AutoBalance.Enable.25MHeroic=1
-AutoBalance.Enable.OtherHeroic=1
+DungeonScale.Enable.5MHeroic=1
+DungeonScale.Enable.10MHeroic=1
+DungeonScale.Enable.25MHeroic=1
+DungeonScale.Enable.OtherHeroic=1
 
 #
-#     AutoBalance.Disable.PerInstance
+#     DungeonScale.Disable.PerInstance
 #        Disable all features for the given instance IDs. If an instance ID is not specified here, that instance will follow
-#        the `AutoBalance.Enable.*` settings.
+#        the `DungeonScale.Enable.*` settings.
 #
 #        Get a list of Instance IDs here: https://wowpedia.fandom.com/wiki/InstanceID#Classic
 #
 #        Format: "[InstanceID], [InstanceID], [InstanceID], ..."
 #
-#        Example: AutoBalance.Disable.PerInstance="33, 43, 129"
+#        Example: DungeonScale.Disable.PerInstance="33, 43, 129"
 #
 #        Default: ""
-AutoBalance.Disable.PerInstance = ""
+DungeonScale.Disable.PerInstance = ""
 
 ##########################
 #
@@ -65,33 +65,33 @@ AutoBalance.Disable.PerInstance = ""
 #
 ##########################
 #
-#     AutoBalance.MinPlayers
-#     AutoBalance.MinPlayers.Heroic
+#     DungeonScale.MinPlayers
+#     DungeonScale.MinPlayers.Heroic
 #        Sets the Minimum Number of players to scale down to for all normal/heroic instances.
 #        If fewer than this number of players enter the instance, scale to the specified value.
 #
 #        NOTE: Player Difficulty Offset is applied AFTER the player count is adjusted for the MinPlayer setting
 #
-#        AutoBalance.MinPlayers affects only normal instances.
-#        AutoBalance.MinPlayers.Heroic affects only heroic instances.
+#        DungeonScale.MinPlayers affects only normal instances.
+#        DungeonScale.MinPlayers.Heroic affects only heroic instances.
 #
-#        Example: AutoBalance.MinPlayers = 1
-#                 AutoBalance.MinPlayers.Heroic = 5
+#        Example: DungeonScale.MinPlayers = 1
+#                 DungeonScale.MinPlayers.Heroic = 5
 #
 #        Default: 1
-AutoBalance.MinPlayers = 1
-AutoBalance.MinPlayers.Heroic = 1
+DungeonScale.MinPlayers = 1
+DungeonScale.MinPlayers.Heroic = 1
 
 #
-#     AutoBalance.MinPlayers.PerInstance
-#     AutoBalance.MinPlayers.Heroic.PerInstance
+#     DungeonScale.MinPlayers.PerInstance
+#     DungeonScale.MinPlayers.Heroic.PerInstance
 #        Sets the Minimum Number of players to scale down to per-instance ID.
 #        If fewer than this number of players enter the instance, scale to the specified value.
 #
 #        NOTE: Player Difficulty Offset is applied AFTER the player count is adjusted for the MinPlayer setting
 #
-#        AutoBalance.MinPlayers.PerInstance affects only normal instances.
-#        AutoBalance.MinPlayers.Heroic.PerInstance affects only heroic instances.
+#        DungeonScale.MinPlayers.PerInstance affects only normal instances.
+#        DungeonScale.MinPlayers.Heroic.PerInstance affects only heroic instances.
 #
 #        If a given Instance ID is not specified in this list, the minimum number of players is set by the generic MinPlayers settings.
 #
@@ -99,12 +99,12 @@ AutoBalance.MinPlayers.Heroic = 1
 #
 #        Format: "[InstanceID] [MinPlayers], [InstanceID] [MinPlayers], [InstanceID] [MinPlayers], ..."
 #
-#        Example: AutoBalance.MinPlayers.PerInstance="33 2, 43 5, 129 4"
-#                 AutoBalance.MinPlayers.PerInstance="33 5, 43 5, 129 5"
+#        Example: DungeonScale.MinPlayers.PerInstance="33 2, 43 5, 129 4"
+#                 DungeonScale.MinPlayers.PerInstance="33 5, 43 5, 129 5"
 #
 #        Default: ""
-AutoBalance.MinPlayers.PerInstance = ""
-AutoBalance.MinPlayers.Heroic.PerInstance = ""
+DungeonScale.MinPlayers.PerInstance = ""
+DungeonScale.MinPlayers.Heroic.PerInstance = ""
 
 ##########################
 #
@@ -112,7 +112,7 @@ AutoBalance.MinPlayers.Heroic.PerInstance = ""
 #
 ##########################
 
-#     AutoBalance.InflectionPoint* series
+#     DungeonScale.InflectionPoint* series
 #        InflectionPoint
 #           Changes the inflection point of the Hyperbolic Tangent function that determines the enemy multiplier for a given player count.
 #           This adjusts the shape of the overall curve. A lower value means that difficulty will increase faster as you add players.
@@ -129,7 +129,7 @@ AutoBalance.MinPlayers.Heroic.PerInstance = ""
 #           When the curve to determine the enemy multiplier is calculated, start the curve at this value.
 #
 #           This allows you to make enemies have higher stats for lower player counts without adversely affecting the stats of
-#           higher player counts. Applied before `AutoBalance.StatModifier*` values.
+#           higher player counts. Applied before `DungeonScale.StatModifier*` values.
 #
 #           Value may be negative if needed to achieve your desired curve.
 #
@@ -142,7 +142,7 @@ AutoBalance.MinPlayers.Heroic.PerInstance = ""
 #           When the curve to determine the enemy multiplier is calculated, end the curve at this value.
 #
 #           This allows you to make enemies have lower stats for higher player counts without adversely affecting the stats of
-#           lower player counts. Applied before `AutoBalance.StatModifier*` values.
+#           lower player counts. Applied before `DungeonScale.StatModifier*` values.
 #
 #           To understand how CurveFloor and CurveCeiling affect the multiplier, see this image:
 #           https://i.imgur.com/I8S4cwJ.png
@@ -170,28 +170,28 @@ AutoBalance.MinPlayers.Heroic.PerInstance = ""
 #     The "Final Multiplier" value is the actual multiplier that will be applied to enemies in a given dungeon.
 
 ### 5-player dungeons
-AutoBalance.InflectionPoint=0.7
-AutoBalance.InflectionPoint.CurveFloor=0.1
-AutoBalance.InflectionPoint.CurveCeiling=1.0
-AutoBalance.InflectionPoint.BossModifier=1.0
+DungeonScale.InflectionPoint=0.7
+DungeonScale.InflectionPoint.CurveFloor=0.1
+DungeonScale.InflectionPoint.CurveCeiling=1.0
+DungeonScale.InflectionPoint.BossModifier=1.0
 
 ### 5-player heroic dungeons
-AutoBalance.InflectionPointHeroic=0.7
-AutoBalance.InflectionPointHeroic.CurveFloor=0.1
-AutoBalance.InflectionPointHeroic.CurveCeiling=1.0
-AutoBalance.InflectionPointHeroic.BossModifier=1.0
+DungeonScale.InflectionPointHeroic=0.7
+DungeonScale.InflectionPointHeroic.CurveFloor=0.1
+DungeonScale.InflectionPointHeroic.CurveCeiling=1.0
+DungeonScale.InflectionPointHeroic.BossModifier=1.0
 
 ### Default for all raids
-AutoBalance.InflectionPointRaid=0.5
-AutoBalance.InflectionPointRaid.CurveFloor=0.0
-AutoBalance.InflectionPointRaid.CurveCeiling=1.0
-AutoBalance.InflectionPointRaid.BossModifier=1.0
+DungeonScale.InflectionPointRaid=0.5
+DungeonScale.InflectionPointRaid.CurveFloor=0.0
+DungeonScale.InflectionPointRaid.CurveCeiling=1.0
+DungeonScale.InflectionPointRaid.BossModifier=1.0
 
 ### Default for all heroic raids
-AutoBalance.InflectionPointRaidHeroic=0.5
-AutoBalance.InflectionPointRaidHeroic.CurveFloor=0.0
-AutoBalance.InflectionPointRaidHeroic.CurveCeiling=1.0
-AutoBalance.InflectionPointRaidHeroic.BossModifier=1.0
+DungeonScale.InflectionPointRaidHeroic=0.5
+DungeonScale.InflectionPointRaidHeroic.CurveFloor=0.0
+DungeonScale.InflectionPointRaidHeroic.CurveCeiling=1.0
+DungeonScale.InflectionPointRaidHeroic.BossModifier=1.0
 
 ###
 ### By default, all instances use the settings configured above. To customize settings for
@@ -200,49 +200,49 @@ AutoBalance.InflectionPointRaidHeroic.BossModifier=1.0
 ###
 
 ### 10-player raids
-AutoBalance.InflectionPointRaid10M=
-AutoBalance.InflectionPointRaid10M.CurveFloor=
-AutoBalance.InflectionPointRaid10M.CurveCeiling=
-AutoBalance.InflectionPointRaid10M.BossModifier=
+DungeonScale.InflectionPointRaid10M=
+DungeonScale.InflectionPointRaid10M.CurveFloor=
+DungeonScale.InflectionPointRaid10M.CurveCeiling=
+DungeonScale.InflectionPointRaid10M.BossModifier=
 
 ### 10-player heroic raids
-AutoBalance.InflectionPointRaid10MHeroic=
-AutoBalance.InflectionPointRaid10MHeroic.CurveFloor=
-AutoBalance.InflectionPointRaid10MHeroic.CurveCeiling=
-AutoBalance.InflectionPointRaid10MHeroic.BossModifier=
+DungeonScale.InflectionPointRaid10MHeroic=
+DungeonScale.InflectionPointRaid10MHeroic.CurveFloor=
+DungeonScale.InflectionPointRaid10MHeroic.CurveCeiling=
+DungeonScale.InflectionPointRaid10MHeroic.BossModifier=
 
 ### 15-player raids
-AutoBalance.InflectionPointRaid15M=
-AutoBalance.InflectionPointRaid15M.CurveFloor=
-AutoBalance.InflectionPointRaid15M.CurveCeiling=
-AutoBalance.InflectionPointRaid15M.BossModifier=
+DungeonScale.InflectionPointRaid15M=
+DungeonScale.InflectionPointRaid15M.CurveFloor=
+DungeonScale.InflectionPointRaid15M.CurveCeiling=
+DungeonScale.InflectionPointRaid15M.BossModifier=
 
 ### 20-player raids
-AutoBalance.InflectionPointRaid20M=
-AutoBalance.InflectionPointRaid20M.CurveFloor=
-AutoBalance.InflectionPointRaid20M.CurveCeiling=
-AutoBalance.InflectionPointRaid20M.BossModifier=
+DungeonScale.InflectionPointRaid20M=
+DungeonScale.InflectionPointRaid20M.CurveFloor=
+DungeonScale.InflectionPointRaid20M.CurveCeiling=
+DungeonScale.InflectionPointRaid20M.BossModifier=
 
 ### 25-player raids
-AutoBalance.InflectionPointRaid25M=
-AutoBalance.InflectionPointRaid25M.CurveFloor=
-AutoBalance.InflectionPointRaid25M.CurveCeiling=
-AutoBalance.InflectionPointRaid25M.BossModifier=
+DungeonScale.InflectionPointRaid25M=
+DungeonScale.InflectionPointRaid25M.CurveFloor=
+DungeonScale.InflectionPointRaid25M.CurveCeiling=
+DungeonScale.InflectionPointRaid25M.BossModifier=
 
 ### 25-player heroic raids
-AutoBalance.InflectionPointRaid25MHeroic=
-AutoBalance.InflectionPointRaid25MHeroic.CurveFloor=
-AutoBalance.InflectionPointRaid25MHeroic.CurveCeiling=
-AutoBalance.InflectionPointRaid25MHeroic.BossModifier=
+DungeonScale.InflectionPointRaid25MHeroic=
+DungeonScale.InflectionPointRaid25MHeroic.CurveFloor=
+DungeonScale.InflectionPointRaid25MHeroic.CurveCeiling=
+DungeonScale.InflectionPointRaid25MHeroic.BossModifier=
 
 ### 40-player raids
-AutoBalance.InflectionPointRaid40M=
-AutoBalance.InflectionPointRaid40M.CurveFloor=
-AutoBalance.InflectionPointRaid40M.CurveCeiling=
-AutoBalance.InflectionPointRaid40M.BossModifier=
+DungeonScale.InflectionPointRaid40M=
+DungeonScale.InflectionPointRaid40M.CurveFloor=
+DungeonScale.InflectionPointRaid40M.CurveCeiling=
+DungeonScale.InflectionPointRaid40M.BossModifier=
 
 #
-#     AutoBalance.InflectionPoint.PerInstance
+#     DungeonScale.InflectionPoint.PerInstance
 #        Sets Inflection Point settings for specific `InstanceID`s.
 #
 #        Get a list of Instance IDs here: https://wowpedia.fandom.com/wiki/InstanceID#Classic
@@ -252,14 +252,14 @@ AutoBalance.InflectionPointRaid40M.BossModifier=
 #
 #        Format: "[InstanceID] [InflectionPoint] [CurveFloor] [CurveCeiling], [InstanceID] [InflectionPoint] [CurveFloor] [CurveCeiling], ..."
 #
-#        Example: AutoBalance.InflectionPoint.PerInstance="229 0.4 0.0 1.5, 309 -1 0.0 1.1, 48 0.3"
+#        Example: DungeonScale.InflectionPoint.PerInstance="229 0.4 0.0 1.5, 309 -1 0.0 1.1, 48 0.3"
 #
 #        Default: ""
 #
-AutoBalance.InflectionPoint.PerInstance=""
+DungeonScale.InflectionPoint.PerInstance=""
 
 #
-#     AutoBalance.InflectionPoint.Boss.PerInstance
+#     DungeonScale.InflectionPoint.Boss.PerInstance
 #        Sets Inflection Point settings for all bosses in specific `InstanceID`s. Note that the first value is "InflectionPointMultiplier", which behaves
 #        identically to the BossModifier setting. The "normal" inflection point is multiplied by this value for bosses. To better understand this effect,
 #        see the interactive spreadsheet.
@@ -271,17 +271,17 @@ AutoBalance.InflectionPoint.PerInstance=""
 #
 #        Format: "[InstanceID] [InflectionPointMultiplier], [InstanceID] [InflectionPointMultiplier], ..."
 #
-#        Example: AutoBalance.InflectionPoint.Boss.PerInstance="229 1.2, 309 1.5, 48 1.25"
+#        Example: DungeonScale.InflectionPoint.Boss.PerInstance="229 1.2, 309 1.5, 48 1.25"
 #
 #        Default: ""
 #
-AutoBalance.InflectionPoint.Boss.PerInstance=""
+DungeonScale.InflectionPoint.Boss.PerInstance=""
 
 #
-#     AutoBalance.playerCountDifficultyOffset
+#     DungeonScale.playerCountDifficultyOffset
 #        Offset of players inside an instance. Affects all instance types.
 #        Default:     0
-AutoBalance.playerCountDifficultyOffset=0
+DungeonScale.playerCountDifficultyOffset=0
 
 ##########################
 #
@@ -289,13 +289,13 @@ AutoBalance.playerCountDifficultyOffset=0
 #
 ##########################
 
-#     AutoBalance.StatModifier* series
+#     DungeonScale.StatModifier* series
 #        The difficulty curve (as defined by the InflectionPoint settings) determines the base multiplier. The base
 #        multiplier is then adjusted (multiplied) by the appropriate StatModifier setting. This allows you to control
 #        the balance of how scaling affects the four adjustable stats: health, mana, armor, and damage.
 #
-#        AutoBalance.StatModifier*.<Stat> -- only affects non-boss creatures
-#        AutoBalance.StatModifier*.Boss.<Stat> -- only affects bosses
+#        DungeonScale.StatModifier*.<Stat> -- only affects non-boss creatures
+#        DungeonScale.StatModifier*.Boss.<Stat> -- only affects bosses
 #
 #        To see this in action, change the `StatModifier` value on the spreadsheet:
 #        https://docs.google.com/spreadsheets/d/100cmKIJIjCZ-ncWd0K9ykO8KUgwFTcwg4h2nfE_UeCc/copy
@@ -329,56 +329,56 @@ AutoBalance.playerCountDifficultyOffset=0
 #
 
 ### 5-player dungeons
-AutoBalance.StatModifier.Global=1.0
-AutoBalance.StatModifier.Health=1.0
-AutoBalance.StatModifier.Mana=1.0
-AutoBalance.StatModifier.Armor=1.0
-AutoBalance.StatModifier.Damage=1.0
+DungeonScale.StatModifier.Global=1.0
+DungeonScale.StatModifier.Health=1.0
+DungeonScale.StatModifier.Mana=1.0
+DungeonScale.StatModifier.Armor=1.0
+DungeonScale.StatModifier.Damage=1.0
 
-AutoBalance.StatModifier.Boss.Global=1.0
-AutoBalance.StatModifier.Boss.Health=1.0
-AutoBalance.StatModifier.Boss.Mana=1.0
-AutoBalance.StatModifier.Boss.Armor=1.0
-AutoBalance.StatModifier.Boss.Damage=1.0
+DungeonScale.StatModifier.Boss.Global=1.0
+DungeonScale.StatModifier.Boss.Health=1.0
+DungeonScale.StatModifier.Boss.Mana=1.0
+DungeonScale.StatModifier.Boss.Armor=1.0
+DungeonScale.StatModifier.Boss.Damage=1.0
 
 ### 5-player heroic dungeons
-AutoBalance.StatModifierHeroic.Global=1.0
-AutoBalance.StatModifierHeroic.Health=1.0
-AutoBalance.StatModifierHeroic.Mana=1.0
-AutoBalance.StatModifierHeroic.Armor=1.0
-AutoBalance.StatModifierHeroic.Damage=1.0
+DungeonScale.StatModifierHeroic.Global=1.0
+DungeonScale.StatModifierHeroic.Health=1.0
+DungeonScale.StatModifierHeroic.Mana=1.0
+DungeonScale.StatModifierHeroic.Armor=1.0
+DungeonScale.StatModifierHeroic.Damage=1.0
 
-AutoBalance.StatModifierHeroic.Boss.Global=1.0
-AutoBalance.StatModifierHeroic.Boss.Health=1.0
-AutoBalance.StatModifierHeroic.Boss.Mana=1.0
-AutoBalance.StatModifierHeroic.Boss.Armor=1.0
-AutoBalance.StatModifierHeroic.Boss.Damage=1.0
+DungeonScale.StatModifierHeroic.Boss.Global=1.0
+DungeonScale.StatModifierHeroic.Boss.Health=1.0
+DungeonScale.StatModifierHeroic.Boss.Mana=1.0
+DungeonScale.StatModifierHeroic.Boss.Armor=1.0
+DungeonScale.StatModifierHeroic.Boss.Damage=1.0
 
 ### Default for all raids
-AutoBalance.StatModifierRaid.Global=1.0
-AutoBalance.StatModifierRaid.Health=1.0
-AutoBalance.StatModifierRaid.Mana=1.0
-AutoBalance.StatModifierRaid.Armor=1.0
-AutoBalance.StatModifierRaid.Damage=1.0
+DungeonScale.StatModifierRaid.Global=1.0
+DungeonScale.StatModifierRaid.Health=1.0
+DungeonScale.StatModifierRaid.Mana=1.0
+DungeonScale.StatModifierRaid.Armor=1.0
+DungeonScale.StatModifierRaid.Damage=1.0
 
-AutoBalance.StatModifierRaid.Boss.Global=1.0
-AutoBalance.StatModifierRaid.Boss.Health=1.0
-AutoBalance.StatModifierRaid.Boss.Mana=1.0
-AutoBalance.StatModifierRaid.Boss.Armor=1.0
-AutoBalance.StatModifierRaid.Boss.Damage=1.0
+DungeonScale.StatModifierRaid.Boss.Global=1.0
+DungeonScale.StatModifierRaid.Boss.Health=1.0
+DungeonScale.StatModifierRaid.Boss.Mana=1.0
+DungeonScale.StatModifierRaid.Boss.Armor=1.0
+DungeonScale.StatModifierRaid.Boss.Damage=1.0
 
 ### Default for all heroic raids
-AutoBalance.StatModifierRaidHeroic.Global=1.0
-AutoBalance.StatModifierRaidHeroic.Health=1.0
-AutoBalance.StatModifierRaidHeroic.Mana=1.0
-AutoBalance.StatModifierRaidHeroic.Armor=1.0
-AutoBalance.StatModifierRaidHeroic.Damage=1.0
+DungeonScale.StatModifierRaidHeroic.Global=1.0
+DungeonScale.StatModifierRaidHeroic.Health=1.0
+DungeonScale.StatModifierRaidHeroic.Mana=1.0
+DungeonScale.StatModifierRaidHeroic.Armor=1.0
+DungeonScale.StatModifierRaidHeroic.Damage=1.0
 
-AutoBalance.StatModifierRaidHeroic.Boss.Global=1.0
-AutoBalance.StatModifierRaidHeroic.Boss.Health=1.0
-AutoBalance.StatModifierRaidHeroic.Boss.Mana=1.0
-AutoBalance.StatModifierRaidHeroic.Boss.Armor=1.0
-AutoBalance.StatModifierRaidHeroic.Boss.Damage=1.0
+DungeonScale.StatModifierRaidHeroic.Boss.Global=1.0
+DungeonScale.StatModifierRaidHeroic.Boss.Health=1.0
+DungeonScale.StatModifierRaidHeroic.Boss.Mana=1.0
+DungeonScale.StatModifierRaidHeroic.Boss.Armor=1.0
+DungeonScale.StatModifierRaidHeroic.Boss.Damage=1.0
 
 ###
 ### By default, all instances use the settings configured above. To customize settings for
@@ -387,97 +387,97 @@ AutoBalance.StatModifierRaidHeroic.Boss.Damage=1.0
 ###
 
 ### 10-player raids
-AutoBalance.StatModifierRaid10M.Global=
-AutoBalance.StatModifierRaid10M.Health=
-AutoBalance.StatModifierRaid10M.Mana=
-AutoBalance.StatModifierRaid10M.Armor=
-AutoBalance.StatModifierRaid10M.Damage=
+DungeonScale.StatModifierRaid10M.Global=
+DungeonScale.StatModifierRaid10M.Health=
+DungeonScale.StatModifierRaid10M.Mana=
+DungeonScale.StatModifierRaid10M.Armor=
+DungeonScale.StatModifierRaid10M.Damage=
 
-AutoBalance.StatModifierRaid10M.Boss.Global=
-AutoBalance.StatModifierRaid10M.Boss.Health=
-AutoBalance.StatModifierRaid10M.Boss.Mana=
-AutoBalance.StatModifierRaid10M.Boss.Armor=
-AutoBalance.StatModifierRaid10M.Boss.Damage=
+DungeonScale.StatModifierRaid10M.Boss.Global=
+DungeonScale.StatModifierRaid10M.Boss.Health=
+DungeonScale.StatModifierRaid10M.Boss.Mana=
+DungeonScale.StatModifierRaid10M.Boss.Armor=
+DungeonScale.StatModifierRaid10M.Boss.Damage=
 
 ### 10-player heroic raids
-AutoBalance.StatModifierRaid10MHeroic.Global=
-AutoBalance.StatModifierRaid10MHeroic.Health=
-AutoBalance.StatModifierRaid10MHeroic.Mana=
-AutoBalance.StatModifierRaid10MHeroic.Armor=
-AutoBalance.StatModifierRaid10MHeroic.Damage=
+DungeonScale.StatModifierRaid10MHeroic.Global=
+DungeonScale.StatModifierRaid10MHeroic.Health=
+DungeonScale.StatModifierRaid10MHeroic.Mana=
+DungeonScale.StatModifierRaid10MHeroic.Armor=
+DungeonScale.StatModifierRaid10MHeroic.Damage=
 
-AutoBalance.StatModifierRaid10MHeroic.Boss.Global=
-AutoBalance.StatModifierRaid10MHeroic.Boss.Health=
-AutoBalance.StatModifierRaid10MHeroic.Boss.Mana=
-AutoBalance.StatModifierRaid10MHeroic.Boss.Armor=
-AutoBalance.StatModifierRaid10MHeroic.Boss.Damage=
+DungeonScale.StatModifierRaid10MHeroic.Boss.Global=
+DungeonScale.StatModifierRaid10MHeroic.Boss.Health=
+DungeonScale.StatModifierRaid10MHeroic.Boss.Mana=
+DungeonScale.StatModifierRaid10MHeroic.Boss.Armor=
+DungeonScale.StatModifierRaid10MHeroic.Boss.Damage=
 
 ### 15-player raids
-AutoBalance.StatModifierRaid15M.Global=
-AutoBalance.StatModifierRaid15M.Health=
-AutoBalance.StatModifierRaid15M.Mana=
-AutoBalance.StatModifierRaid15M.Armor=
-AutoBalance.StatModifierRaid15M.Damage=
+DungeonScale.StatModifierRaid15M.Global=
+DungeonScale.StatModifierRaid15M.Health=
+DungeonScale.StatModifierRaid15M.Mana=
+DungeonScale.StatModifierRaid15M.Armor=
+DungeonScale.StatModifierRaid15M.Damage=
 
-AutoBalance.StatModifierRaid15M.Boss.Global=
-AutoBalance.StatModifierRaid15M.Boss.Health=
-AutoBalance.StatModifierRaid15M.Boss.Mana=
-AutoBalance.StatModifierRaid15M.Boss.Armor=
-AutoBalance.StatModifierRaid15M.Boss.Damage=
+DungeonScale.StatModifierRaid15M.Boss.Global=
+DungeonScale.StatModifierRaid15M.Boss.Health=
+DungeonScale.StatModifierRaid15M.Boss.Mana=
+DungeonScale.StatModifierRaid15M.Boss.Armor=
+DungeonScale.StatModifierRaid15M.Boss.Damage=
 
 ### 20-player raids
-AutoBalance.StatModifierRaid20M.Global=
-AutoBalance.StatModifierRaid20M.Health=
-AutoBalance.StatModifierRaid20M.Mana=
-AutoBalance.StatModifierRaid20M.Armor=
-AutoBalance.StatModifierRaid20M.Damage=
+DungeonScale.StatModifierRaid20M.Global=
+DungeonScale.StatModifierRaid20M.Health=
+DungeonScale.StatModifierRaid20M.Mana=
+DungeonScale.StatModifierRaid20M.Armor=
+DungeonScale.StatModifierRaid20M.Damage=
 
-AutoBalance.StatModifierRaid20M.Boss.Global=
-AutoBalance.StatModifierRaid20M.Boss.Health=
-AutoBalance.StatModifierRaid20M.Boss.Mana=
-AutoBalance.StatModifierRaid20M.Boss.Armor=
-AutoBalance.StatModifierRaid20M.Boss.Damage=
+DungeonScale.StatModifierRaid20M.Boss.Global=
+DungeonScale.StatModifierRaid20M.Boss.Health=
+DungeonScale.StatModifierRaid20M.Boss.Mana=
+DungeonScale.StatModifierRaid20M.Boss.Armor=
+DungeonScale.StatModifierRaid20M.Boss.Damage=
 
 ### 25-player raids
-AutoBalance.StatModifierRaid25M.Global=
-AutoBalance.StatModifierRaid25M.Health=
-AutoBalance.StatModifierRaid25M.Mana=
-AutoBalance.StatModifierRaid25M.Armor=
-AutoBalance.StatModifierRaid25M.Damage=
+DungeonScale.StatModifierRaid25M.Global=
+DungeonScale.StatModifierRaid25M.Health=
+DungeonScale.StatModifierRaid25M.Mana=
+DungeonScale.StatModifierRaid25M.Armor=
+DungeonScale.StatModifierRaid25M.Damage=
 
-AutoBalance.StatModifierRaid25M.Boss.Global=
-AutoBalance.StatModifierRaid25M.Boss.Health=
-AutoBalance.StatModifierRaid25M.Boss.Mana=
-AutoBalance.StatModifierRaid25M.Boss.Armor=
-AutoBalance.StatModifierRaid25M.Boss.Damage=
+DungeonScale.StatModifierRaid25M.Boss.Global=
+DungeonScale.StatModifierRaid25M.Boss.Health=
+DungeonScale.StatModifierRaid25M.Boss.Mana=
+DungeonScale.StatModifierRaid25M.Boss.Armor=
+DungeonScale.StatModifierRaid25M.Boss.Damage=
 
 ### 25-player heroic raids
-AutoBalance.StatModifierRaid25MHeroic.Global=
-AutoBalance.StatModifierRaid25MHeroic.Health=
-AutoBalance.StatModifierRaid25MHeroic.Mana=
-AutoBalance.StatModifierRaid25MHeroic.Armor=
-AutoBalance.StatModifierRaid25MHeroic.Damage=
+DungeonScale.StatModifierRaid25MHeroic.Global=
+DungeonScale.StatModifierRaid25MHeroic.Health=
+DungeonScale.StatModifierRaid25MHeroic.Mana=
+DungeonScale.StatModifierRaid25MHeroic.Armor=
+DungeonScale.StatModifierRaid25MHeroic.Damage=
 
-AutoBalance.StatModifierRaid25MHeroic.Boss.Global=
-AutoBalance.StatModifierRaid25MHeroic.Boss.Health=
-AutoBalance.StatModifierRaid25MHeroic.Boss.Mana=
-AutoBalance.StatModifierRaid25MHeroic.Boss.Armor=
-AutoBalance.StatModifierRaid25MHeroic.Boss.Damage=
+DungeonScale.StatModifierRaid25MHeroic.Boss.Global=
+DungeonScale.StatModifierRaid25MHeroic.Boss.Health=
+DungeonScale.StatModifierRaid25MHeroic.Boss.Mana=
+DungeonScale.StatModifierRaid25MHeroic.Boss.Armor=
+DungeonScale.StatModifierRaid25MHeroic.Boss.Damage=
 
 ### 40-player raids
-AutoBalance.StatModifierRaid40M.Global=
-AutoBalance.StatModifierRaid40M.Health=
-AutoBalance.StatModifierRaid40M.Mana=
-AutoBalance.StatModifierRaid40M.Armor=
-AutoBalance.StatModifierRaid40M.Damage=
+DungeonScale.StatModifierRaid40M.Global=
+DungeonScale.StatModifierRaid40M.Health=
+DungeonScale.StatModifierRaid40M.Mana=
+DungeonScale.StatModifierRaid40M.Armor=
+DungeonScale.StatModifierRaid40M.Damage=
 
-AutoBalance.StatModifierRaid40M.Boss.Global=
-AutoBalance.StatModifierRaid40M.Boss.Health=
-AutoBalance.StatModifierRaid40M.Boss.Mana=
-AutoBalance.StatModifierRaid40M.Boss.Armor=
-AutoBalance.StatModifierRaid40M.Boss.Damage=
+DungeonScale.StatModifierRaid40M.Boss.Global=
+DungeonScale.StatModifierRaid40M.Boss.Health=
+DungeonScale.StatModifierRaid40M.Boss.Mana=
+DungeonScale.StatModifierRaid40M.Boss.Armor=
+DungeonScale.StatModifierRaid40M.Boss.Damage=
 
-#     AutoBalance.StatModifier*.CCDuration series
+#     DungeonScale.StatModifier*.CCDuration series
 #        These StatModifier values affect the duration of CC effects used against the players. CC effects are auras with one
 #        or more of these effects:
 #
@@ -499,7 +499,7 @@ AutoBalance.StatModifierRaid40M.Boss.Damage=
 #
 #           CCDuration IS affected by the InflectionPoint curve!
 #           CCDuration IS NOT affected by StatModifier*.Global values!
-#           CCDuration IS affected by AutoBalance.MinCCDurationModifier and AutoBalance.MaxCCDurationModifier!
+#           CCDuration IS affected by DungeonScale.MinCCDurationModifier and DungeonScale.MaxCCDurationModifier!
 #
 #           Example:
 #               Assume we are using the default InflectionPoint curve (0.5 with 0.0 floor and 1.0 ceiling), and there are 3 players in the instance.
@@ -521,20 +521,20 @@ AutoBalance.StatModifierRaid40M.Boss.Damage=
 #
 
 ### 5-player dungeons
-AutoBalance.StatModifier.CCDuration=
-AutoBalance.StatModifier.Boss.CCDuration=
+DungeonScale.StatModifier.CCDuration=
+DungeonScale.StatModifier.Boss.CCDuration=
 
 ### 5-player heroic dungeons
-AutoBalance.StatModifierHeroic.CCDuration=
-AutoBalance.StatModifierHeroic.Boss.CCDuration=
+DungeonScale.StatModifierHeroic.CCDuration=
+DungeonScale.StatModifierHeroic.Boss.CCDuration=
 
 ### Default for all raids
-AutoBalance.StatModifierRaid.CCDuration=
-AutoBalance.StatModifierRaid.Boss.CCDuration=
+DungeonScale.StatModifierRaid.CCDuration=
+DungeonScale.StatModifierRaid.Boss.CCDuration=
 
 ### Default for all heroic raids
-AutoBalance.StatModifierRaidHeroic.CCDuration=
-AutoBalance.StatModifierRaidHeroic.Boss.CCDuration=
+DungeonScale.StatModifierRaidHeroic.CCDuration=
+DungeonScale.StatModifierRaidHeroic.Boss.CCDuration=
 
 ###
 ### Configuring the CCDuration settings above this line will affect all dungeons and raids.
@@ -542,32 +542,32 @@ AutoBalance.StatModifierRaidHeroic.Boss.CCDuration=
 ###
 
 ### 10-player raids
-AutoBalance.StatModifierRaid10M.CCDuration=
-AutoBalance.StatModifierRaid10M.Boss.CCDuration=
+DungeonScale.StatModifierRaid10M.CCDuration=
+DungeonScale.StatModifierRaid10M.Boss.CCDuration=
 
 ### 10-player heroic raids
-AutoBalance.StatModifierRaid10MHeroic.CCDuration=
-AutoBalance.StatModifierRaid10MHeroic.Boss.CCDuration=
+DungeonScale.StatModifierRaid10MHeroic.CCDuration=
+DungeonScale.StatModifierRaid10MHeroic.Boss.CCDuration=
 
 ### 15-player raids
-AutoBalance.StatModifierRaid15M.CCDuration=
-AutoBalance.StatModifierRaid15M.Boss.CCDuration=
+DungeonScale.StatModifierRaid15M.CCDuration=
+DungeonScale.StatModifierRaid15M.Boss.CCDuration=
 
 ### 20-player raids
-AutoBalance.StatModifierRaid20M.CCDuration=
-AutoBalance.StatModifierRaid20M.Boss.CCDuration=
+DungeonScale.StatModifierRaid20M.CCDuration=
+DungeonScale.StatModifierRaid20M.Boss.CCDuration=
 
 ### 25-player raids
-AutoBalance.StatModifierRaid25M.CCDuration=
-AutoBalance.StatModifierRaid25M.Boss.CCDuration=
+DungeonScale.StatModifierRaid25M.CCDuration=
+DungeonScale.StatModifierRaid25M.Boss.CCDuration=
 
 ### 25-player heroic raids
-AutoBalance.StatModifierRaid25MHeroic.CCDuration=
-AutoBalance.StatModifierRaid25MHeroic.Boss.CCDuration=
+DungeonScale.StatModifierRaid25MHeroic.CCDuration=
+DungeonScale.StatModifierRaid25MHeroic.Boss.CCDuration=
 
 ### 40-player raids
-AutoBalance.StatModifierRaid40M.CCDuration=
-AutoBalance.StatModifierRaid40M.Boss.CCDuration=
+DungeonScale.StatModifierRaid40M.CCDuration=
+DungeonScale.StatModifierRaid40M.Boss.CCDuration=
 
 ##########################
 #
@@ -604,7 +604,7 @@ AutoBalance.StatModifierRaid40M.Boss.CCDuration=
 #
 
 #
-#     AutoBalance.StatModifier.PerInstance
+#     DungeonScale.StatModifier.PerInstance
 #        Allows setting per-instance stat modifier values. Specifying a value of `-1` will skip overriding of that value.
 #        You may omit entries from the end of the string if desired. Only one set of values should be specified per InstanceID.
 #
@@ -614,13 +614,13 @@ AutoBalance.StatModifierRaid40M.Boss.CCDuration=
 #
 #        Format: "[InstanceID] [Global] [Health] [Mana] [Armor] [Damage] [CCDuration], [InstanceID] [Global] [Health] [Mana] [Armor] [Damage] [CCDuration], ..."
 #
-#        Example: AutoBalance.StatModifier.PerInstance="409 1.0 0.8 0.8 1.0 1.2 1.0, 568 -1 -1 -1 -1 1.35, 43 -1 1.2 1.2"
+#        Example: DungeonScale.StatModifier.PerInstance="409 1.0 0.8 0.8 1.0 1.2 1.0, 568 -1 -1 -1 -1 1.35, 43 -1 1.2 1.2"
 #
 #        Default: Empty string, which disables the feature.
-AutoBalance.StatModifier.PerInstance=""
+DungeonScale.StatModifier.PerInstance=""
 
 #
-#     AutoBalance.StatModifier.Boss.PerInstance
+#     DungeonScale.StatModifier.Boss.PerInstance
 #        Allows setting per-instance stat modifier values for bosses only. Specifying a value of `-1` will skip overriding of that value.
 #        You may omit entries from the end of the string if desired. Only one set of values should be specified per InstanceID.
 #
@@ -630,52 +630,52 @@ AutoBalance.StatModifier.PerInstance=""
 #
 #        Format: "[InstanceID] [Boss.Global] [Boss.Health] [Boss.Mana] [Boss.Armor] [Boss.Damage] [Boss.CCDuration], [InstanceID] [Boss.Global] [Boss.Health] [Boss.Mana] [Boss.Armor] [Boss.Damage] [Boss.CCDuration], ..."
 #
-#        Example: AutoBalance.StatModifier.Boss.PerInstance="409 1.0 0.8 0.8 1.0 1.2 0.8, 568 -1 -1 -1 -1 1.35, 43 -1 1.2 1.2"
+#        Example: DungeonScale.StatModifier.Boss.PerInstance="409 1.0 0.8 0.8 1.0 1.2 0.8, 568 -1 -1 -1 -1 1.35, 43 -1 1.2 1.2"
 #
 #        Default: Empty string, which disables the feature.
-AutoBalance.StatModifier.Boss.PerInstance=""
+DungeonScale.StatModifier.Boss.PerInstance=""
 
 #
-#     AutoBalance.StatModifier.Boss.PerCreature
+#     DungeonScale.StatModifier.Boss.PerCreature
 #        Allows setting per-creature stat modifier values. Specifying a value of `-1` will skip overriding of that value.
 #        You may omit entries from the end of the string if desired. Only one set of values should be specified per CreatureID.
 #
 #        Format: "[CreatureID] [Global] [Health] [Mana] [Armor] [Damage] [CCDuration], [CreatureID] [Global] [Health] [Mana] [Armor] [Damage] [CCDuration], ..."
 #
-#        Example: AutoBalance.StatModifier.Boss.PerInstance="14507 1.0 0.8 0.8 1.0 1.2 0.5, 11372 -1 -1 -1 -1 1.35, 43 -1 1.2 1.2"
+#        Example: DungeonScale.StatModifier.Boss.PerInstance="14507 1.0 0.8 0.8 1.0 1.2 0.5, 11372 -1 -1 -1 -1 1.35, 43 -1 1.2 1.2"
 #
 #        Default: Empty string, which disables the feature.
-AutoBalance.StatModifier.PerCreature=""
+DungeonScale.StatModifier.PerCreature=""
 
 #
-#     AutoBalance.MinHPModifier
+#     DungeonScale.MinHPModifier
 #        Minimum Modifier setting for Health Modification. An enemy's health will not be multiplied by a value smaller than this.
 #        Default:     0.01
-AutoBalance.MinHPModifier=0.01
+DungeonScale.MinHPModifier=0.01
 
 #
-#     AutoBalance.MinManaModifier
+#     DungeonScale.MinManaModifier
 #        Minimum Modifier setting for Mana Modification. An enemy's mana will not be multiplied by a value smaller than this.
 #        Default:     0.01
-AutoBalance.MinManaModifier=0.01
+DungeonScale.MinManaModifier=0.01
 
 #
-#     AutoBalance.MinDamageModifier
+#     DungeonScale.MinDamageModifier
 #        Minimum Modifier setting for Damage Modification. An enemy's damage will not be multiplied by a value smaller than this.
 #        Default:     0.01
-AutoBalance.MinDamageModifier=0.01
+DungeonScale.MinDamageModifier=0.01
 
 #
-#     AutoBalance.MinCCDurationModifier
+#     DungeonScale.MinCCDurationModifier
 #        Minimum Modifier setting for Crowd Control Duration. The duration of an enemy's CC will not be multiplied by a value smaller than this.
 #        Default:     0.25
-AutoBalance.MinCCDurationModifier=0.25
+DungeonScale.MinCCDurationModifier=0.25
 
 #
-#     AutoBalance.MaxCCDurationModifier
+#     DungeonScale.MaxCCDurationModifier
 #        Maximum Modifier setting for Crowd Control Duration. The duration of an enemy's CC will not be multiplied by a value greater than this.
 #        Default:     1.0
-AutoBalance.MaxCCDurationModifier=1.0
+DungeonScale.MaxCCDurationModifier=1.0
 
 ##########################
 #
@@ -684,20 +684,20 @@ AutoBalance.MaxCCDurationModifier=1.0
 ##########################
 
 #
-#     AutoBalance.ForcedIDXX
+#     DungeonScale.ForcedIDXX
 #        Sets MobIDs for the group they belong to.
-#        All 5-player creatures should go in AutoBalance.ForcedID5=
-#        All 10-player creatures should go in AutoBalance.ForcedID10=
-#        All X-player creatures should go in AutoBalance.ForcedIDX=
-AutoBalance.ForcedID40=""
-AutoBalance.ForcedID25=""
-AutoBalance.ForcedID20=""
-AutoBalance.ForcedID10=""
-AutoBalance.ForcedID5=""
-AutoBalance.ForcedID2=""
+#        All 5-player creatures should go in DungeonScale.ForcedID5=
+#        All 10-player creatures should go in DungeonScale.ForcedID10=
+#        All X-player creatures should go in DungeonScale.ForcedIDX=
+DungeonScale.ForcedID40=""
+DungeonScale.ForcedID25=""
+DungeonScale.ForcedID20=""
+DungeonScale.ForcedID10=""
+DungeonScale.ForcedID5=""
+DungeonScale.ForcedID2=""
 
 #
-#     AutoBalance.DisabledID
+#     DungeonScale.DisabledID
 #        Disable scaling on specific creatures
 #
 # 26499 = Arthas (Culling of Stratholme)
@@ -706,7 +706,7 @@ AutoBalance.ForcedID2=""
 # 30161,30248 = Eye of Eternity
 # 35644,36558 = Trial of the Champion
 # 36838,36839 = ICC Gunship Cannons
-AutoBalance.DisabledID="26499,27692,27755,27756,33062,33060,33109,30161,30248,35644,36558,36838,36839"
+DungeonScale.DisabledID="26499,27692,27755,27756,33062,33060,33109,30161,30248,35644,36558,36838,36839"
 
 ##########################
 #
@@ -715,15 +715,15 @@ AutoBalance.DisabledID="26499,27692,27755,27756,33062,33060,33109,30161,30248,35
 ##########################
 
 #
-#     AutoBalance.LevelScaling
+#     DungeonScale.LevelScaling
 #        Scale creatures in instances based on the highest-level player.
 #        0 = Disabled
 #        1 = Enabled (only in dungeons/raids)
 #        Default:     1
-AutoBalance.LevelScaling=0
+DungeonScale.LevelScaling=0
 
 #
-#     AutoBalance.LevelScaling.Method
+#     DungeonScale.LevelScaling.Method
 #        Selects which method should be used when the level for scaled creatures.
 #
 #           fixed:
@@ -738,10 +738,10 @@ AutoBalance.LevelScaling=0
 #        Possible values: "fixed" or "dynamic"
 #
 #        Default: "dynamic"
-AutoBalance.LevelScaling.Method="dynamic"
+DungeonScale.LevelScaling.Method="dynamic"
 
 #
-#     AutoBalance.LevelScaling.SkipHigherLevels
+#     DungeonScale.LevelScaling.SkipHigherLevels
 #        If an instance's average creature level is no more than (SkipHigherLevels) levels
 #        above the highest player level, do not scale down.
 #
@@ -750,7 +750,7 @@ AutoBalance.LevelScaling.Method="dynamic"
 #
 #        Default: 3
 #
-#     AutoBalance.LevelScaling.SkipLowerLevels
+#     DungeonScale.LevelScaling.SkipLowerLevels
 #        If an instance's average creature level is no more than (SkipLowerLevels) levels
 #        below of the Highest player level, do not scale up.
 #
@@ -758,40 +758,40 @@ AutoBalance.LevelScaling.Method="dynamic"
 #        To disable this feature entirely and scale all lower-level instances, set this to 0.
 #
 #        Default: 5
-AutoBalance.LevelScaling.SkipHigherLevels = 3
-AutoBalance.LevelScaling.SkipLowerLevels = 5
+DungeonScale.LevelScaling.SkipHigherLevels = 3
+DungeonScale.LevelScaling.SkipLowerLevels = 5
 
 #
-#     AutoBalance.LevelScaling.DynamicLevel.Ceiling.*
+#     DungeonScale.LevelScaling.DynamicLevel.Ceiling.*
 #        Sets the maximum number of levels creatures scaled in "dynamic" mode can be OVER your highest-level
 #        player. The creature in the dungeon with the highest original level will be set to the highest-level
 #        player's level + this value.
 #
-#        Only takes effect if AutoBalance.LevelScaling.Method = "dynamic"
+#        Only takes effect if DungeonScale.LevelScaling.Method = "dynamic"
 #
 #        Default: 1 (Dungeons), 2 (Heroic Dungeons), 3 (Raids), 3 (Heroic Raids)
 #
-#     AutoBalance.LevelScaling.DynamicLevel.Floor.*
+#     DungeonScale.LevelScaling.DynamicLevel.Floor.*
 #        Sets the maximum number of levels creatures scaled in "dynamic" mode can be UNDER your highest-level
 #        player. For instances with wide level spreads, ensures that the level differences stay reasonable.
 #
-#        Only takes effect if AutoBalance.LevelScaling.Method = "dynamic"
+#        Only takes effect if DungeonScale.LevelScaling.Method = "dynamic"
 #
 #        Default: 5
-AutoBalance.LevelScaling.DynamicLevel.Ceiling.Dungeons = 1
-AutoBalance.LevelScaling.DynamicLevel.Floor.Dungeons = 5
+DungeonScale.LevelScaling.DynamicLevel.Ceiling.Dungeons = 1
+DungeonScale.LevelScaling.DynamicLevel.Floor.Dungeons = 5
 
-AutoBalance.LevelScaling.DynamicLevel.Ceiling.HeroicDungeons = 2
-AutoBalance.LevelScaling.DynamicLevel.Floor.HeroicDungeons = 5
+DungeonScale.LevelScaling.DynamicLevel.Ceiling.HeroicDungeons = 2
+DungeonScale.LevelScaling.DynamicLevel.Floor.HeroicDungeons = 5
 
-AutoBalance.LevelScaling.DynamicLevel.Ceiling.Raids = 3
-AutoBalance.LevelScaling.DynamicLevel.Floor.Raids = 5
+DungeonScale.LevelScaling.DynamicLevel.Ceiling.Raids = 3
+DungeonScale.LevelScaling.DynamicLevel.Floor.Raids = 5
 
-AutoBalance.LevelScaling.DynamicLevel.Ceiling.HeroicRaids = 3
-AutoBalance.LevelScaling.DynamicLevel.Floor.HeroicRaids = 5
+DungeonScale.LevelScaling.DynamicLevel.Ceiling.HeroicRaids = 3
+DungeonScale.LevelScaling.DynamicLevel.Floor.HeroicRaids = 5
 
 #
-#     AutoBalance.LevelScaling.DynamicLevel.PerInstance
+#     DungeonScale.LevelScaling.DynamicLevel.PerInstance
 #        Allows setting per-instance Dynamic Level options. Specifying a value of `-1` will skip overriding of that value.
 #        You may omit entries from the end of the string if desired. Only one set of values should be specified per InstanceID.
 #        Set to a value of "" to disable the feature.
@@ -800,16 +800,16 @@ AutoBalance.LevelScaling.DynamicLevel.Floor.HeroicRaids = 5
 #
 #        Format: "[InstanceID] [SkipHigherLevels] [SkipLowerLevels] [DynamicLevelCeiling] [DynamicLevelFloor], [InstanceID] [SkipHigherLevels] [SkipLowerLevels] [DynamicLevelCeiling] [DynamicLevelFloor], ..."
 #
-#        Example: AutoBalance.StatModifier.PerInstance="409 -1 -1 0 3, 568 3, 43 -1 8"
+#        Example: DungeonScale.StatModifier.PerInstance="409 -1 -1 0 3, 568 3, 43 -1 8"
 #
 #        Default: "229 -1 -1 1, 230 0 0" (Recommended adjustments)
 #
 # 229 - Blackrock Spire
 # 230 - Blackrock Depths
-AutoBalance.LevelScaling.DynamicLevel.PerInstance="229 -1 -1 1, 230 0 0"
+DungeonScale.LevelScaling.DynamicLevel.PerInstance="229 -1 -1 1, 230 0 0"
 
 #
-#     AutoBalance.LevelScaling.DynamicLevel.DistanceCheck.PerInstance
+#     DungeonScale.LevelScaling.DynamicLevel.DistanceCheck.PerInstance
 #        Some dungeons contain multiple wings that exist in the same InstanceID. These wings may have different level requirements.
 #        You may set this setting per-instance to ensure that only creatures within [WorldUnits] of any player are included in the
 #        instance level calculation. This will improve the accuracy of creature levels in instances that contain multiple wings.
@@ -821,20 +821,20 @@ AutoBalance.LevelScaling.DynamicLevel.PerInstance="229 -1 -1 1, 230 0 0"
 #
 #        Format: "[InstanceID] [WorldUnits]"
 #
-#        Example: AutoBalance.LevelScaling.DynamicLevel.DistanceCheck.PerInstance="189 500, 624 250"
+#        Example: DungeonScale.LevelScaling.DynamicLevel.DistanceCheck.PerInstance="189 500, 624 250"
 #
 #        Default: "189 500" (Recommended adjustments)
 #
 # 189 - Scarlet Monastery
-AutoBalance.LevelScaling.DynamicLevel.DistanceCheck.PerInstance="189 500"
+DungeonScale.LevelScaling.DynamicLevel.DistanceCheck.PerInstance="189 500"
 
 #
-#     AutoBalance.LevelScaling.LevelEndGameBoost
+#     DungeonScale.LevelScaling.LevelEndGameBoost
 #
 #        NOTICE: This setting is currently not implemented pending a rewrite.
 #                Enabling it here has NO effect.
 #
-#        See: https://github.com/azerothcore/mod-autobalance/issues/156
+#        See: https://github.com/azerothcore/mod-DungeonScale/issues/156
 #
 #        Old description:
 #        End game creatures have an exponential (not linear) regression
@@ -842,7 +842,7 @@ AutoBalance.LevelScaling.DynamicLevel.DistanceCheck.PerInstance="189 500"
 #        to have stats as near possible to the official ones.
 #
 #        Default:     0 (1 = ON, 0 = OFF)
-AutoBalance.LevelScaling.EndGameBoost = 0        # setting to 1 does not do anything
+DungeonScale.LevelScaling.EndGameBoost = 0        # setting to 1 does not do anything
 
 ##########################
 #
@@ -851,7 +851,7 @@ AutoBalance.LevelScaling.EndGameBoost = 0        # setting to 1 does not do anyt
 ##########################
 
 #
-#     AutoBalance.RewardScaling.Method
+#     DungeonScale.RewardScaling.Method
 #        Sets which method should be used when scaling down XP and Money in an instance.
 #
 #           fixed:
@@ -867,47 +867,47 @@ AutoBalance.LevelScaling.EndGameBoost = 0        # setting to 1 does not do anyt
 #        Possible values: "fixed" or "dynamic"
 #
 #        Default: "dynamic"
-AutoBalance.RewardScaling.Method="dynamic"
+DungeonScale.RewardScaling.Method="dynamic"
 
 #
-#     AutoBalance.RewardScaling.XP
-#        Scale XP based on the `AutoBalance.RewardScaling.Method` selection.
+#     DungeonScale.RewardScaling.XP
+#        Scale XP based on the `DungeonScale.RewardScaling.Method` selection.
 #
 #        Default: 1 (1 = ON, 0 = OFF)
 #
-#     AutoBalance.RewardScaling.XP.Modifier
+#     DungeonScale.RewardScaling.XP.Modifier
 #        Apply a flat modifier to the amount of XP that is rewarded to players.
 #
-#        Only takes effect if `AutoBalance.RewardScaling.XP` is 1.
+#        Only takes effect if `DungeonScale.RewardScaling.XP` is 1.
 #
 #        If `RewardScaling.XP.Modifier` is set to 1.5 and RewardScaling determines that 100xp should be
 #        rewarded to each player, 150xp will be rewarded.
 #
 #        Default: 1.0 (no change)
-AutoBalance.RewardScaling.XP = 1
-AutoBalance.RewardScaling.XP.Modifier = 1.0
+DungeonScale.RewardScaling.XP = 1
+DungeonScale.RewardScaling.XP.Modifier = 1.0
 
 #
-#     AutoBalance.RewardScaling.Money
-#        Scale Money drops based on the `AutoBalance.RewardScaling.Method` selection. If set to 0, the full
+#     DungeonScale.RewardScaling.Money
+#        Scale Money drops based on the `DungeonScale.RewardScaling.Method` selection. If set to 0, the full
 #        amount will be rewarded.
 #
 #        Default: 1 (1 = ON, 0 = OFF)
 #
-#     AutoBalance.RewardScaling.Money.Modifier
+#     DungeonScale.RewardScaling.Money.Modifier
 #        Apply a flat modifier to the amount of money that is rewarded to players.
 #
-#        Only takes effect if `AutoBalance.RewardScaling.Money` is 1.
+#        Only takes effect if `DungeonScale.RewardScaling.Money` is 1.
 #
 #        If `RewardScaling.Money.Modifier` is set to 1.5 and RewardScaling determines that 1 gold should be
 #        rewarded to each player, 1 gold 50 silver will be rewarded.
 #
 #        Default: 1.0 (no change)
-AutoBalance.RewardScaling.Money = 1
-AutoBalance.RewardScaling.Money.Modifier = 1.0
+DungeonScale.RewardScaling.Money = 1
+DungeonScale.RewardScaling.Money.Modifier = 1.0
 
 #
-#     AutoBalance.RewardScaling.Loot
+#     DungeonScale.RewardScaling.Loot
 #        Scale Loot drop chance based on the number of players in the dungeon vs the max.  If set to 0, the full
 #        chance to drop will be at play.
 #        
@@ -917,22 +917,22 @@ AutoBalance.RewardScaling.Money.Modifier = 1.0
 #
 #        Default: 1 (1 = ON, 0 = OFF)
 #
-#     AutoBalance.RewardScaling.Loot.BOPAlwaysDropException
+#     DungeonScale.RewardScaling.Loot.BOPAlwaysDropException
 #        If set to 1, BOP items will always drop (such as loot from most bosses)
 #
 #        Default: 1 (Always drop BOP items)
 #
-#     AutoBalance.RewardScaling.Loot.ExemptContainers
+#     DungeonScale.RewardScaling.Loot.ExemptContainers
 #        If set to 1, Items from containers (chests, gathering points like mining/herb/fishing nodes, etc) will always yield
 #
 #        Default: 1 (Always)
 #
-#     AutoBalance.RewardScaling.Loot.ExemptSkinning
+#     DungeonScale.RewardScaling.Loot.ExemptSkinning
 #        If set to 1, rewards from skinning are exempt from drop scaling
 #
 #        Default: 1 (Always)
 #
-#     AutoBalance.RewardScaling.Loot.ExceptionItemIDs
+#     DungeonScale.RewardScaling.Loot.ExceptionItemIDs
 #        Any values put in this list will not be subjected to the scaled drop rates, separated by commas
 #
 #        Defaults: (See below)
@@ -959,11 +959,11 @@ AutoBalance.RewardScaling.Money.Modifier = 1.0
 #		 - 49352 Cologne Neutralizer - Comes from 49631
 #		 - 49635 Court Subpoena - Comes from 49631
 #
-AutoBalance.RewardScaling.Loot = 1
-AutoBalance.RewardScaling.Loot.BOPAlwaysDropException = 1
-AutoBalance.RewardScaling.Loot.ExemptContainers = 1
-AutoBalance.RewardScaling.Loot.ExemptSkinning = 1
-AutoBalance.RewardScaling.Loot.ExceptionItemIDs = 8444, 11078, 11197, 11602, 11885, 13302, 13303, 13304, 13305, 13306, 13307, 21761, 21762, 30436, 30437, 31088, 37372, 43151, 43158, 49351, 49352, 49635
+DungeonScale.RewardScaling.Loot = 1
+DungeonScale.RewardScaling.Loot.BOPAlwaysDropException = 1
+DungeonScale.RewardScaling.Loot.ExemptContainers = 1
+DungeonScale.RewardScaling.Loot.ExemptSkinning = 1
+DungeonScale.RewardScaling.Loot.ExceptionItemIDs = 8444, 11078, 11197, 11602, 11885, 13302, 13303, 13304, 13305, 13306, 13307, 21761, 21762, 30436, 30437, 31088, 37372, 43151, 43158, 49351, 49352, 49635
 
 ##########################
 #
@@ -972,10 +972,10 @@ AutoBalance.RewardScaling.Loot.ExceptionItemIDs = 8444, 11078, 11197, 11602, 118
 ##########################
 
 #
-#     AutoBalance.PlayerChangeNotify
+#     DungeonScale.PlayerChangeNotify
 #        Set Auto Notifications to all players in Instance that player count has changed.
 #        Default:     1 (1 = ON, 0 = OFF)
-AutoBalance.PlayerChangeNotify=1
+DungeonScale.PlayerChangeNotify=1
 
 ##########################
 #
@@ -984,35 +984,35 @@ AutoBalance.PlayerChangeNotify=1
 ##########################
 
 #
-#   AutoBalance.reward.enable
+#   DungeonScale.reward.enable
 #       This is an experimental feature to reward a player that kill a boss when
 #       a pre-wotlk dungeon/raid is completed with creature levelling enabled.
 #       This is an idea to boost old contents even if you're end-game player.
 #
 #       Default:     0 (1 = ON, 0 = OFF)
-AutoBalance.reward.enable = 0
+DungeonScale.reward.enable = 0
 
 
 #
-#   AutoBalance.reward.raidToken
-#   AutoBalance.reward.dungeonToken
+#   DungeonScale.reward.raidToken
+#   DungeonScale.reward.dungeonToken
 #
 #
 #       Default:
 #           raidToken -> emblem of frost (49426)
 #           dungeonToken -> emblem of triumph (47241)
-AutoBalance.reward.raidToken    = 49426
-AutoBalance.reward.dungeonToken = 47241
+DungeonScale.reward.raidToken    = 49426
+DungeonScale.reward.dungeonToken = 47241
 
 #
-#   AutoBalance.reward.MinPlayerReward
+#   DungeonScale.reward.MinPlayerReward
 #       This conf option checks how many players are in the same
 #       map before allowing the reward to be carried out
 #       if MinPlayerReward is set to two and player is soloing this conf doesn't reward then.
 #		this will give more a challenge to players for low level instances.
 #
 #       Default:     1
-AutoBalance.reward.MinPlayerReward = 1
+DungeonScale.reward.MinPlayerReward = 1
 
 ##########################
 #
@@ -1021,10 +1021,10 @@ AutoBalance.reward.MinPlayerReward = 1
 ##########################
 
 #
-#     AutoBalanceAnnounce.enable
+#     DungeonScaleAnnounce.enable
 #        Announce the module on login if it is enabled
 #        Default:     1 (1 = ON, 0 = OFF)
-AutoBalanceAnnounce.enable=0
+DungeonScaleAnnounce.enable=0
 
 ##########################
 #
@@ -1036,23 +1036,23 @@ AutoBalanceAnnounce.enable=0
 # They will still be applied to support backwards compatability, but will be removed entirely in a future release.
 # Their entire functionality (and more) has been moved to new settings referenced in this config file.
 #
-AutoBalance.enable=
-AutoBalance.PerDungeonScaling=
-AutoBalance.PerDungeonBossScaling=
-AutoBalance.BossInflectionMult=
-AutoBalance.rate.global=
-AutoBalance.rate.health=
-AutoBalance.rate.mana=
-AutoBalance.rate.armor=
-AutoBalance.rate.damage=
-AutoBalance.DungeonScaleDownXP=
-AutoBalance.DungeonScaleDownMoney=
-AutoBalance.LevelHigherOffset=
-AutoBalance.LevelLowerOffset=
-AutoBalance.PerDungeonPlayerCounts=
+DungeonScale.enable=
+DungeonScale.PerDungeonScaling=
+DungeonScale.PerDungeonBossScaling=
+DungeonScale.BossInflectionMult=
+DungeonScale.rate.global=
+DungeonScale.rate.health=
+DungeonScale.rate.mana=
+DungeonScale.rate.armor=
+DungeonScale.rate.damage=
+DungeonScale.DungeonScaleDownXP=
+DungeonScale.DungeonScaleDownMoney=
+DungeonScale.LevelHigherOffset=
+DungeonScale.LevelLowerOffset=
+DungeonScale.PerDungeonPlayerCounts=
 
 # The following variables have been removed entirely and should not be used in a new or existing deployment.
 # Their values should be left blank.
 # Their entire functionality (and more) has been moved to new settings referenced in this config file.
-AutoBalance.DungeonsOnly=
-AutoBalance.levelUseDbValuesWhenExists=
+DungeonScale.DungeonsOnly=
+DungeonScale.levelUseDbValuesWhenExists=

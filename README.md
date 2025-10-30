@@ -15,10 +15,10 @@ This module is intended to scale based on number of players, instance mobs and b
 ## Logger Names
 | Logger | Description |
 | :----- | ----------- |
-| `Logger.module.AutoBalance` | Main logger, verbose debug logs. Map detection, list management, creature adjustments, multiplier, modifiers. Catch-all. |
-| `Logger.module.AutoBalance_CombatLocking` | Debug logs related to the combat locking/unlocking mechanism for maps. |
-| `Logger.module.AutoBalance_DamageHealingCC` | Debug logs for the spell/melee/CC modifications that are made in real-time. |
-| `Logger.module.AutoBalance_StatGeneration` | Detailed debug logs that show all the calculation steps in how different multipliers are derived. |
+| `Logger.module.DungeonScale` | Main logger, verbose debug logs. Map detection, list management, creature adjustments, multiplier, modifiers. Catch-all. |
+| `Logger.module.DungeonScale_CombatLocking` | Debug logs related to the combat locking/unlocking mechanism for maps. |
+| `Logger.module.DungeonScale_DamageHealingCC` | Debug logs for the spell/melee/CC modifications that are made in real-time. |
+| `Logger.module.DungeonScale_StatGeneration` | Detailed debug logs that show all the calculation steps in how different multipliers are derived. |
 
 ## References
 - [Interactive Inflection Point Spreadsheet](https://docs.google.com/spreadsheets/d/100cmKIJIjCZ-ncWd0K9ykO8KUgwFTcwg4h2nfE_UeCc/copy)
