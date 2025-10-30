@@ -22,7 +22,7 @@
 
 /*
 * Script Name: DungeonScale
-* Maintaining Author: Nathan Handley (https://github.com/NathanHandley/mod-dungeon-scale)
+* Rewrite into DungeonScale: Nathan Handley (https://github.com/NathanHandley/mod-dungeon-scale)
 * Original Script Name: AutoBalance
 * AutoBalance Original Authors: KalCorp and Vaughner
 * Original Maintainer(s): AzerothCore

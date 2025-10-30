@@ -342,9 +342,8 @@ static int8 LevelScalingSkipHigherLevels, LevelScalingSkipLowerLevels;
 static int8 LevelScalingDynamicLevelCeilingDungeons, LevelScalingDynamicLevelFloorDungeons, LevelScalingDynamicLevelCeilingRaids, LevelScalingDynamicLevelFloorRaids;
 static int8 LevelScalingDynamicLevelCeilingHeroicDungeons, LevelScalingDynamicLevelFloorHeroicDungeons, LevelScalingDynamicLevelCeilingHeroicRaids, LevelScalingDynamicLevelFloorHeroicRaids;
 static ScalingMethod LevelScalingMethod;
-static uint32 rewardRaid, rewardDungeon, MinPlayerReward;
 static bool Announcement;
-static bool LevelScalingEndGameBoost, PlayerChangeNotify, rewardEnabled;
+static bool PlayerChangeNotify;
 static float MinHPModifier, MinManaModifier, MinDamageModifier, MinCCDurationModifier, MaxCCDurationModifier;
 
 // RewardScaling.*
@@ -3090,8 +3089,6 @@ class DungeonScale_WorldScript : public WorldScript
         minPlayersNormal = sConfigMgr->GetOption<int>("DungeonScale.MinPlayers", 1);
         minPlayersHeroic = sConfigMgr->GetOption<int>("DungeonScale.MinPlayers.Heroic", 1);
 
-        if (sConfigMgr->GetOption<float>("DungeonScale.PerDungeonPlayerCounts", false, false))
-            LOG_WARN("server.loading", "mod-autobalance: deprecated value `DungeonScale.PerDungeonPlayerCounts` defined in `DungeonScale.conf`. This variable will be removed in a future release. Please see `DungeonScale.conf.dist` for more details.");
         minPlayersPerDungeonIdMap = LoadMinPlayersPerDungeonId(
             sConfigMgr->GetOption<std::string>("DungeonScale.MinPlayers.PerInstance", sConfigMgr->GetOption<std::string>("DungeonScale.PerDungeonPlayerCounts", "", false), false)
         ); // `DungeonScale.PerDungeonPlayerCounts` for backwards compatibility
@@ -3100,14 +3097,10 @@ class DungeonScale_WorldScript : public WorldScript
         ); // `DungeonScale.PerDungeonPlayerCounts` for backwards compatibility
 
         // Overrides
-        if (sConfigMgr->GetOption<float>("DungeonScale.PerDungeonScaling", false, false))
-            LOG_WARN("server.loading", "mod-autobalance: deprecated value `DungeonScale.PerDungeonScaling` defined in `DungeonScale.conf`. This variable will be removed in a future release. Please see `DungeonScale.conf.dist` for more details.");
         dungeonOverrides = LoadInflectionPointOverrides(
             sConfigMgr->GetOption<std::string>("DungeonScale.InflectionPoint.PerInstance",sConfigMgr->GetOption<std::string>("DungeonScale.PerDungeonScaling", "", false), false)
         ); // `DungeonScale.PerDungeonScaling` for backwards compatibility
 
-        if (sConfigMgr->GetOption<float>("DungeonScale.PerDungeonBossScaling", false, false))
-            LOG_WARN("server.loading", "mod-autobalance: deprecated value `DungeonScale.PerDungeonBossScaling` defined in `DungeonScale.conf`. This variable will be removed in a future release. Please see `DungeonScale.conf.dist` for more details.");
         bossOverrides = LoadInflectionPointOverrides(
             sConfigMgr->GetOption<std::string>("DungeonScale.InflectionPoint.Boss.PerInstance", sConfigMgr->GetOption<std::string>("DungeonScale.PerDungeonBossScaling", "", false), false)
         ); // `DungeonScale.PerDungeonBossScaling` for backwards compatibility
@@ -3133,10 +3126,6 @@ class DungeonScale_WorldScript : public WorldScript
         );
 
         // DungeonScale.Enable.*
-        // Deprecated setting warning
-        if (sConfigMgr->GetOption<int>("DungeonScale.enable", -1, false) != -1)
-            LOG_WARN("server.loading", "mod-autobalance: deprecated value `DungeonScale.enable` defined in `DungeonScale.conf`. This variable will be removed in a future release. Please see `DungeonScale.conf.dist` for more details.");
-
         EnableGlobal = sConfigMgr->GetOption<bool>("DungeonScale.Enable.Global", sConfigMgr->GetOption<bool>("DungeonScale.enable", 1, false)); // `DungeonScale.enable` for backwards compatibility
 
         Enable5M = sConfigMgr->GetOption<bool>("DungeonScale.Enable.5M", sConfigMgr->GetOption<bool>("DungeonScale.enable", 1, false));
@@ -3152,29 +3141,12 @@ class DungeonScale_WorldScript : public WorldScript
         Enable25MHeroic = sConfigMgr->GetOption<bool>("DungeonScale.Enable.25MHeroic", sConfigMgr->GetOption<bool>("DungeonScale.enable", 1, false));
         EnableOtherHeroic = sConfigMgr->GetOption<bool>("DungeonScale.Enable.OtherHeroic", sConfigMgr->GetOption<bool>("DungeonScale.enable", 1, false));
 
-        // Deprecated setting warning
-        if (sConfigMgr->GetOption<int>("DungeonScale.DungeonsOnly", -1, false) != -1)
-            LOG_WARN("server.loading", "mod-autobalance: deprecated value `DungeonScale.DungeonsOnly` defined in `DungeonScale.conf`. This variable has been removed and has no effect. Please see `DungeonScale.conf.dist` for more details.");
-
-        if (sConfigMgr->GetOption<int>("DungeonScale.levelUseDbValuesWhenExists", -1, false) != -1)
-            LOG_WARN("server.loading", "mod-autobalance: deprecated value `DungeonScale.levelUseDbValuesWhenExists` defined in `DungeonScale.conf`. This variable has been removed and has no effect. Please see `DungeonScale.conf.dist` for more details.");
-
         // Misc Settings
         // TODO: Organize and standardize variable names
-
         PlayerChangeNotify = sConfigMgr->GetOption<bool>("DungeonScale.PlayerChangeNotify", 1);
-
-        rewardEnabled = sConfigMgr->GetOption<bool>("DungeonScale.reward.enable", 1);
         PlayerCountDifficultyOffset = sConfigMgr->GetOption<uint32>("DungeonScale.playerCountDifficultyOffset", 0);
-        rewardRaid = sConfigMgr->GetOption<uint32>("DungeonScale.reward.raidToken", 49426);
-        rewardDungeon = sConfigMgr->GetOption<uint32>("DungeonScale.reward.dungeonToken", 47241);
-        MinPlayerReward = sConfigMgr->GetOption<float>("DungeonScale.reward.MinPlayerReward", 1);
 
         // InflectionPoint*
-        // warn the console if deprecated values are detected
-        if (sConfigMgr->GetOption<float>("DungeonScale.BossInflectionMult", false, false))
-            LOG_WARN("server.loading", "mod-autobalance: deprecated value `DungeonScale.BossInflectionMult` defined in `DungeonScale.conf`. This variable will be removed in a future release. Please see `DungeonScale.conf.dist` for more details.");
-
         InflectionPoint =                           sConfigMgr->GetOption<float>("DungeonScale.InflectionPoint", 0.5f, false);
         InflectionPointCurveFloor =                 sConfigMgr->GetOption<float>("DungeonScale.InflectionPoint.CurveFloor", 0.0f, false);
         InflectionPointCurveCeiling =               sConfigMgr->GetOption<float>("DungeonScale.InflectionPoint.CurveCeiling", 1.0f, false);
@@ -3231,18 +3203,6 @@ class DungeonScale_WorldScript : public WorldScript
         InflectionPointRaid40MBoss =                sConfigMgr->GetOption<float>("DungeonScale.InflectionPointRaid40M.BossModifier", InflectionPointRaidBoss, false);
 
         // StatModifier*
-        // warn the console if deprecated values are detected
-        if (sConfigMgr->GetOption<float>("DungeonScale.rate.global", false, false))
-            LOG_WARN("server.loading", "mod-autobalance: deprecated value `DungeonScale.rate.global` defined in `DungeonScale.conf`. This variable will be removed in a future release. Please see `DungeonScale.conf.dist` for more details.");
-        if (sConfigMgr->GetOption<float>("DungeonScale.rate.health", false, false))
-            LOG_WARN("server.loading", "mod-autobalance: deprecated value `DungeonScale.rate.health` defined in `DungeonScale.conf`. This variable will be removed in a future release. Please see `DungeonScale.conf.dist` for more details.");
-        if (sConfigMgr->GetOption<float>("DungeonScale.rate.mana", false, false))
-            LOG_WARN("server.loading", "mod-autobalance: deprecated value `DungeonScale.rate.mana` defined in `DungeonScale.conf`. This variable will be removed in a future release. Please see `DungeonScale.conf.dist` for more details.");
-        if (sConfigMgr->GetOption<float>("DungeonScale.rate.armor", false, false))
-            LOG_WARN("server.loading", "mod-autobalance: deprecated value `DungeonScale.rate.armor` defined in `DungeonScale.conf`. This variable will be removed in a future release. Please see `DungeonScale.conf.dist` for more details.");
-        if (sConfigMgr->GetOption<float>("DungeonScale.rate.damage", false, false))
-            LOG_WARN("server.loading", "mod-autobalance: deprecated value `DungeonScale.rate.damage` defined in `DungeonScale.conf`. This variable will be removed in a future release. Please see `DungeonScale.conf.dist` for more details.");
-
         // 5-player dungeons
         StatModifier_Global =                       sConfigMgr->GetOption<float>("DungeonScale.StatModifier.Global", sConfigMgr->GetOption<float>("DungeonScale.rate.global", 1.0f, false), false); // `DungeonScale.rate.global` for backwards compatibility
         StatModifier_Health =                       sConfigMgr->GetOption<float>("DungeonScale.StatModifier.Health", sConfigMgr->GetOption<float>("DungeonScale.rate.health", 1.0f, false), false); // `DungeonScale.rate.health` for backwards compatibility
@@ -3433,11 +3393,7 @@ class DungeonScale_WorldScript : public WorldScript
             LevelScalingMethod = DUNGEONSCALE_SCALING_DYNAMIC;
         }
 
-        if (sConfigMgr->GetOption<float>("DungeonScale.LevelHigherOffset", false, false))
-            LOG_WARN("server.loading", "mod-autobalance: deprecated value `DungeonScale.LevelHigherOffset` defined in `DungeonScale.conf`. This variable will be removed in a future release. Please see `DungeonScale.conf.dist` for more details.");
         LevelScalingSkipHigherLevels = sConfigMgr->GetOption<uint8>("DungeonScale.LevelScaling.SkipHigherLevels", sConfigMgr->GetOption<uint32>("DungeonScale.LevelHigherOffset", 3, false), true);
-        if (sConfigMgr->GetOption<float>("DungeonScale.LevelLowerOffset", false, false))
-            LOG_WARN("server.loading", "mod-autobalance: deprecated value `DungeonScale.LevelLowerOffset` defined in `DungeonScale.conf`. This variable will be removed in a future release. Please see `DungeonScale.conf.dist` for more details.");
         LevelScalingSkipLowerLevels = sConfigMgr->GetOption<uint8>("DungeonScale.LevelScaling.SkipLowerLevels", sConfigMgr->GetOption<uint32>("DungeonScale.LevelLowerOffset", 5, false), true);
 
         LevelScalingDynamicLevelCeilingDungeons = sConfigMgr->GetOption<uint8>("DungeonScale.LevelScaling.DynamicLevel.Ceiling.Dungeons", 1);
@@ -3449,21 +3405,7 @@ class DungeonScale_WorldScript : public WorldScript
         LevelScalingDynamicLevelCeilingHeroicRaids = sConfigMgr->GetOption<uint8>("DungeonScale.LevelScaling.DynamicLevel.Ceiling.HeroicRaids", 3);
         LevelScalingDynamicLevelFloorHeroicRaids = sConfigMgr->GetOption<uint8>("DungeonScale.LevelScaling.DynamicLevel.Floor.HeroicRaids", 5);
 
-        if (sConfigMgr->GetOption<float>("DungeonScale.LevelEndGameBoost", false, false))
-            LOG_WARN("server.loading", "mod-autobalance: deprecated value `DungeonScale.LevelEndGameBoost` defined in `DungeonScale.conf`. This variable will be removed in a future release. Please see `DungeonScale.conf.dist` for more details.");
-        LevelScalingEndGameBoost = sConfigMgr->GetOption<bool>("DungeonScale.LevelScaling.EndGameBoost", sConfigMgr->GetOption<bool>("DungeonScale.LevelEndGameBoost", 1, false), true);
-        if (LevelScalingEndGameBoost)
-        {
-            LOG_WARN("server.loading", "mod-autobalance: `DungeonScale.LevelScaling.EndGameBoost` is enabled in the configuration, but is not currently implemented. No effect.");
-            LevelScalingEndGameBoost = 0;
-        }
-
         // RewardScaling.*
-        // warn the console if deprecated values are detected
-        if (sConfigMgr->GetOption<float>("DungeonScale.DungeonScaleDownXP", false, false))
-            LOG_WARN("server.loading", "mod-autobalance: deprecated value `DungeonScale.DungeonScaleDownXP` defined in `DungeonScale.conf`. This variable will be removed in a future release. Please see `DungeonScale.conf.dist` for more details.");
-        if (sConfigMgr->GetOption<float>("DungeonScale.DungeonScaleDownMoney", false, false))
-            LOG_WARN("server.loading", "mod-autobalance: deprecated value `DungeonScale.DungeonScaleDownMoney` defined in `DungeonScale.conf`. This variable will be removed in a future release. Please see `DungeonScale.conf.dist` for more details.");
         RewardScalingExceptionItemIDs = ParseIntsFromString(sConfigMgr->GetOption<std::string>("DungeonScale.RewardScaling.Loot.ExceptionItemIDs", ""));
 
         std::string RewardScalingMethodString = sConfigMgr->GetOption<std::string>("DungeonScale.RewardScaling.Method", "dynamic", false);
@@ -6745,45 +6687,6 @@ public:
 class DungeonScale_GlobalScript : public GlobalScript {
 public:
     DungeonScale_GlobalScript() : GlobalScript("DungeonScale_GlobalScript") { }
-
-    void OnAfterUpdateEncounterState(Map* map, EncounterCreditType type,  uint32 /*creditEntry*/, Unit* /*source*/, Difficulty /*difficulty_fixed*/, DungeonEncounterList const* /*encounters*/, uint32 /*dungeonCompleted*/, bool updated) override {
-        //if (!dungeonCompleted)
-        //    return;
-
-        if (!rewardEnabled || !updated)
-            return;
-
-        DungeonScaleMapInfo *mapDSInfo=map->CustomData.GetDefault<DungeonScaleMapInfo>("DungeonScaleMapInfo");
-
-        if (mapDSInfo->adjustedPlayerCount < MinPlayerReward)
-            return;
-
-        // skip if it's not a pre-wotlk dungeon/raid and if it's not scaled
-        if (!LevelScaling || mapDSInfo->mapLevel <= 70 || mapDSInfo->lfgMinLevel <= 70
-            // skip when not in dungeon or not kill credit
-            || type != ENCOUNTER_CREDIT_KILL_CREATURE || !map->IsDungeon())
-            return;
-
-        Map::PlayerList const &playerList = map->GetPlayers();
-
-        if (playerList.IsEmpty())
-            return;
-
-        uint32 reward = map->ToInstanceMap()->GetMaxPlayers() > 5 ? rewardRaid : rewardDungeon;
-        if (!reward)
-            return;
-
-        //instanceStart=0, endTime;
-        uint8 difficulty = map->GetDifficulty();
-
-        for (Map::PlayerList::const_iterator itr = playerList.begin(); itr != playerList.end(); ++itr)
-        {
-            if (!itr->GetSource() || itr->GetSource()->IsGameMaster() || itr->GetSource()->GetLevel() < DEFAULT_MAX_LEVEL)
-                continue;
-
-            itr->GetSource()->AddItem(reward, 1 + difficulty); // difficulty boost
-        }
-    }
 
     bool OnItemRoll(Player const* player, LootStoreItem const* lootStoreItem, float& /*chance*/, Loot& loot, LootStore const& /*lootStore*/) override
     {

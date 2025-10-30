@@ -1,8 +1,9 @@
 ## Dungeon Scale
 
-This module is intended to scale based on number of players, instance mobs and bosses' health, mana, and damage. All settings are well-described in the configuration file.
+This module is intended to allow dungeon scaling based on number of players (similar to /players command in Diablo 2).  This will scale instance creature stats (health, mana, and damage).  Additionally (and optionally), this will scale the rewards (exp, gold, item drops) in dungeons.  See the configuration file for all the options.
 
 **NOTE 1:** This module requires at least [this commit](https://github.com/azerothcore/azerothcore-wotlk/commit/f127e583aae3cfa51a77d056c1892a7de07ffb52) of AzerothCore in order to work correctly. Older versions are not supported.
+
 **NOTE 2:** This is customized from the source mode called "AutoBalance" found here: https://github.com/azerothcore/mod-autobalance
 
 ## In-game Commands

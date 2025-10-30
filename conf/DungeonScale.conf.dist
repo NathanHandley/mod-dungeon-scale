@@ -1,37 +1,54 @@
 [worldserver]
-##########################
-#
-# Logging
+###################################################################################################
+# LOGGING
 #
 # Add these lines to your worldserver.conf file to enable logging for DungeonScale.
 # Be sure to add them after the `Logger.module=4,Console Server` line.
-#
-# 4 = Info (Default), 5 = Debug
-#
-##########################
+# 	4 = Info (Default), 5 = Debug
+###################################################################################################
+
 # Logger.module.DungeonScale=4,Console Server
 # Logger.module.DungeonScale_CombatLocking=4,Console Server
 # Logger.module.DungeonScale_DamageHealingCC=4,Console Server
 # Logger.module.DungeonScale_StatGeneration=4,Console Server
 
-##########################
+###################################################################################################
+#     DungeonScaleAnnounce.enable
+#        Announce the module on login if it is enabled
+#        Default:     1 (1 = ON, 0 = OFF)
+#
+#     DungeonScale.PlayerChangeNotify
+#        Set Auto Notifications to all players in Instance that player count has changed.
+#        Default:     1 (1 = ON, 0 = OFF)
+###################################################################################################
+
+DungeonScaleAnnounce.enable=0
+DungeonScale.PlayerChangeNotify=1
+
+###################################################################################################
 #
 # Enable / Disable Settings
-#
-##########################
-
 #
 #     DungeonScale.Enable
 #        Enable/Disable all features globally. If this setting is off, all settings after this one do not take effect.
 #        Default:     1 (1 = ON, 0 = OFF)
-DungeonScale.Enable.Global=1
-
 #
 #     DungeonScale.Enabled.*
 #        Enable/Disable all features for each instance size and difficulty.
 #        If an instance size is set to 0 here, none of the other settings for that instance size will take effect.
 #        Default:     1 (1 = ON, 0 = OFF)
 #
+#     DungeonScale.Disable.PerInstance
+#        Disable all features for the given instance IDs. If an instance ID is not specified here, that instance will follow
+#        the `DungeonScale.Enable.*` settings.
+#        Get a list of Instance IDs here: https://wowpedia.fandom.com/wiki/InstanceID#Classic
+#        Format: "[InstanceID], [InstanceID], [InstanceID], ..."
+#        Example: DungeonScale.Disable.PerInstance="33, 43, 129"
+#        Default: ""
+###################################################################################################
+
+DungeonScale.Enable.Global=1
+
 DungeonScale.Enable.5M=1
 DungeonScale.Enable.10M=1
 DungeonScale.Enable.15M=1
@@ -45,73 +62,44 @@ DungeonScale.Enable.10MHeroic=1
 DungeonScale.Enable.25MHeroic=1
 DungeonScale.Enable.OtherHeroic=1
 
-#
-#     DungeonScale.Disable.PerInstance
-#        Disable all features for the given instance IDs. If an instance ID is not specified here, that instance will follow
-#        the `DungeonScale.Enable.*` settings.
-#
-#        Get a list of Instance IDs here: https://wowpedia.fandom.com/wiki/InstanceID#Classic
-#
-#        Format: "[InstanceID], [InstanceID], [InstanceID], ..."
-#
-#        Example: DungeonScale.Disable.PerInstance="33, 43, 129"
-#
-#        Default: ""
 DungeonScale.Disable.PerInstance = ""
 
-##########################
-#
+###################################################################################################
 # Minimum Players
-#
-##########################
-#
 #     DungeonScale.MinPlayers
 #     DungeonScale.MinPlayers.Heroic
 #        Sets the Minimum Number of players to scale down to for all normal/heroic instances.
 #        If fewer than this number of players enter the instance, scale to the specified value.
-#
 #        NOTE: Player Difficulty Offset is applied AFTER the player count is adjusted for the MinPlayer setting
-#
 #        DungeonScale.MinPlayers affects only normal instances.
 #        DungeonScale.MinPlayers.Heroic affects only heroic instances.
-#
 #        Example: DungeonScale.MinPlayers = 1
 #                 DungeonScale.MinPlayers.Heroic = 5
-#
 #        Default: 1
-DungeonScale.MinPlayers = 1
-DungeonScale.MinPlayers.Heroic = 1
-
 #
 #     DungeonScale.MinPlayers.PerInstance
 #     DungeonScale.MinPlayers.Heroic.PerInstance
 #        Sets the Minimum Number of players to scale down to per-instance ID.
 #        If fewer than this number of players enter the instance, scale to the specified value.
-#
 #        NOTE: Player Difficulty Offset is applied AFTER the player count is adjusted for the MinPlayer setting
-#
 #        DungeonScale.MinPlayers.PerInstance affects only normal instances.
 #        DungeonScale.MinPlayers.Heroic.PerInstance affects only heroic instances.
-#
 #        If a given Instance ID is not specified in this list, the minimum number of players is set by the generic MinPlayers settings.
-#
 #        Get a list of Instance IDs here: https://wowpedia.fandom.com/wiki/InstanceID#Classic
-#
 #        Format: "[InstanceID] [MinPlayers], [InstanceID] [MinPlayers], [InstanceID] [MinPlayers], ..."
-#
 #        Example: DungeonScale.MinPlayers.PerInstance="33 2, 43 5, 129 4"
 #                 DungeonScale.MinPlayers.PerInstance="33 5, 43 5, 129 5"
-#
 #        Default: ""
+###################################################################################################
+
+DungeonScale.MinPlayers = 1
+DungeonScale.MinPlayers.Heroic = 1
+
 DungeonScale.MinPlayers.PerInstance = ""
 DungeonScale.MinPlayers.Heroic.PerInstance = ""
 
-##########################
-#
+###################################################################################################
 # Stat Scaling - Inflection Point
-#
-##########################
-
 #     DungeonScale.InflectionPoint* series
 #        InflectionPoint
 #           Changes the inflection point of the Hyperbolic Tangent function that determines the enemy multiplier for a given player count.
@@ -168,6 +156,7 @@ DungeonScale.MinPlayers.Heroic.PerInstance = ""
 #
 #     To use it, copy the sheet to your own Google Drive and edit the values on the left with the yellow background.
 #     The "Final Multiplier" value is the actual multiplier that will be applied to enemies in a given dungeon.
+###################################################################################################
 
 ### 5-player dungeons
 DungeonScale.InflectionPoint=0.7
@@ -241,54 +230,39 @@ DungeonScale.InflectionPointRaid40M.CurveFloor=
 DungeonScale.InflectionPointRaid40M.CurveCeiling=
 DungeonScale.InflectionPointRaid40M.BossModifier=
 
-#
+###################################################################################################
 #     DungeonScale.InflectionPoint.PerInstance
 #        Sets Inflection Point settings for specific `InstanceID`s.
-#
 #        Get a list of Instance IDs here: https://wowpedia.fandom.com/wiki/InstanceID#Classic
-#
 #        Specifying a value of `-1` will skip overriding of that value. For instances not listed, the default inflection value for the instance's
 #        difficulty and size will be used. You may omit entries from the end of the string if desired. Only one set of values should be specified per InstanceID.
-#
 #        Format: "[InstanceID] [InflectionPoint] [CurveFloor] [CurveCeiling], [InstanceID] [InflectionPoint] [CurveFloor] [CurveCeiling], ..."
-#
 #        Example: DungeonScale.InflectionPoint.PerInstance="229 0.4 0.0 1.5, 309 -1 0.0 1.1, 48 0.3"
-#
 #        Default: ""
 #
-DungeonScale.InflectionPoint.PerInstance=""
-
 #
 #     DungeonScale.InflectionPoint.Boss.PerInstance
 #        Sets Inflection Point settings for all bosses in specific `InstanceID`s. Note that the first value is "InflectionPointMultiplier", which behaves
 #        identically to the BossModifier setting. The "normal" inflection point is multiplied by this value for bosses. To better understand this effect,
 #        see the interactive spreadsheet.
-#
 #        Get a list of Instance IDs here: https://wowpedia.fandom.com/wiki/InstanceID#Classic
-#
 #        For instances not listed, the default inflection value for the instance's difficulty and size will be used. Only one set of values should be specified
 #        per InstanceID.
-#
 #        Format: "[InstanceID] [InflectionPointMultiplier], [InstanceID] [InflectionPointMultiplier], ..."
-#
 #        Example: DungeonScale.InflectionPoint.Boss.PerInstance="229 1.2, 309 1.5, 48 1.25"
-#
 #        Default: ""
-#
-DungeonScale.InflectionPoint.Boss.PerInstance=""
-
 #
 #     DungeonScale.playerCountDifficultyOffset
 #        Offset of players inside an instance. Affects all instance types.
 #        Default:     0
+###################################################################################################
+
+DungeonScale.InflectionPoint.PerInstance=""
+DungeonScale.InflectionPoint.Boss.PerInstance=""
 DungeonScale.playerCountDifficultyOffset=0
 
-##########################
-#
+###################################################################################################
 # Stat Scaling - Stat Modifiers
-#
-##########################
-
 #     DungeonScale.StatModifier* series
 #        The difficulty curve (as defined by the InflectionPoint settings) determines the base multiplier. The base
 #        multiplier is then adjusted (multiplied) by the appropriate StatModifier setting. This allows you to control
@@ -327,6 +301,7 @@ DungeonScale.playerCountDifficultyOffset=0
 #
 #           To better understand this effect, see the interactive spreadsheet.
 #
+###################################################################################################
 
 ### 5-player dungeons
 DungeonScale.StatModifier.Global=1.0
@@ -477,6 +452,7 @@ DungeonScale.StatModifierRaid40M.Boss.Mana=
 DungeonScale.StatModifierRaid40M.Boss.Armor=
 DungeonScale.StatModifierRaid40M.Boss.Damage=
 
+###################################################################################################
 #     DungeonScale.StatModifier*.CCDuration series
 #        These StatModifier values affect the duration of CC effects used against the players. CC effects are auras with one
 #        or more of these effects:
@@ -519,6 +495,7 @@ DungeonScale.StatModifierRaid40M.Boss.Damage=
 #               If no value is set for a given instance type and player count, and the generic values that apply to that instance
 #               are also blank, CC duration will be unchanged.
 #
+###################################################################################################
 
 ### 5-player dungeons
 DungeonScale.StatModifier.CCDuration=
@@ -569,11 +546,9 @@ DungeonScale.StatModifierRaid25MHeroic.Boss.CCDuration=
 DungeonScale.StatModifierRaid40M.CCDuration=
 DungeonScale.StatModifierRaid40M.Boss.CCDuration=
 
-##########################
-#
+###################################################################################################
 # Stat Scaling - Stat Modifier Overrides
 #
-##########################
 # A note on how the stat modifier settings are prioritized. More specific values REPLACE less-specific values.
 # Bosses and non-boss creatures pull from different settings but work in a similar way.
 #
@@ -602,8 +577,6 @@ DungeonScale.StatModifierRaid40M.Boss.CCDuration=
 # In this way you can make your configs as simple or complicated as you like - if you only want to set some generic dungeon and raid modifiers, everything will
 # work as expected. If you want to tune specific creatures to your liking, you can do that too.
 #
-
-#
 #     DungeonScale.StatModifier.PerInstance
 #        Allows setting per-instance stat modifier values. Specifying a value of `-1` will skip overriding of that value.
 #        You may omit entries from the end of the string if desired. Only one set of values should be specified per InstanceID.
@@ -617,9 +590,12 @@ DungeonScale.StatModifierRaid40M.Boss.CCDuration=
 #        Example: DungeonScale.StatModifier.PerInstance="409 1.0 0.8 0.8 1.0 1.2 1.0, 568 -1 -1 -1 -1 1.35, 43 -1 1.2 1.2"
 #
 #        Default: Empty string, which disables the feature.
+
+###################################################################################################
+
 DungeonScale.StatModifier.PerInstance=""
 
-#
+###################################################################################################
 #     DungeonScale.StatModifier.Boss.PerInstance
 #        Allows setting per-instance stat modifier values for bosses only. Specifying a value of `-1` will skip overriding of that value.
 #        You may omit entries from the end of the string if desired. Only one set of values should be specified per InstanceID.
@@ -633,9 +609,11 @@ DungeonScale.StatModifier.PerInstance=""
 #        Example: DungeonScale.StatModifier.Boss.PerInstance="409 1.0 0.8 0.8 1.0 1.2 0.8, 568 -1 -1 -1 -1 1.35, 43 -1 1.2 1.2"
 #
 #        Default: Empty string, which disables the feature.
+###################################################################################################
+
 DungeonScale.StatModifier.Boss.PerInstance=""
 
-#
+###################################################################################################
 #     DungeonScale.StatModifier.Boss.PerCreature
 #        Allows setting per-creature stat modifier values. Specifying a value of `-1` will skip overriding of that value.
 #        You may omit entries from the end of the string if desired. Only one set of values should be specified per CreatureID.
@@ -645,50 +623,47 @@ DungeonScale.StatModifier.Boss.PerInstance=""
 #        Example: DungeonScale.StatModifier.Boss.PerInstance="14507 1.0 0.8 0.8 1.0 1.2 0.5, 11372 -1 -1 -1 -1 1.35, 43 -1 1.2 1.2"
 #
 #        Default: Empty string, which disables the feature.
+###################################################################################################
+
 DungeonScale.StatModifier.PerCreature=""
 
-#
+###################################################################################################
 #     DungeonScale.MinHPModifier
 #        Minimum Modifier setting for Health Modification. An enemy's health will not be multiplied by a value smaller than this.
 #        Default:     0.01
-DungeonScale.MinHPModifier=0.01
-
 #
 #     DungeonScale.MinManaModifier
 #        Minimum Modifier setting for Mana Modification. An enemy's mana will not be multiplied by a value smaller than this.
 #        Default:     0.01
-DungeonScale.MinManaModifier=0.01
-
 #
 #     DungeonScale.MinDamageModifier
 #        Minimum Modifier setting for Damage Modification. An enemy's damage will not be multiplied by a value smaller than this.
 #        Default:     0.01
-DungeonScale.MinDamageModifier=0.01
-
 #
 #     DungeonScale.MinCCDurationModifier
 #        Minimum Modifier setting for Crowd Control Duration. The duration of an enemy's CC will not be multiplied by a value smaller than this.
 #        Default:     0.25
-DungeonScale.MinCCDurationModifier=0.25
-
 #
 #     DungeonScale.MaxCCDurationModifier
 #        Maximum Modifier setting for Crowd Control Duration. The duration of an enemy's CC will not be multiplied by a value greater than this.
 #        Default:     1.0
+###################################################################################################
+
+DungeonScale.MinHPModifier=0.01
+DungeonScale.MinManaModifier=0.01
+DungeonScale.MinDamageModifier=0.01
+DungeonScale.MinCCDurationModifier=0.25
 DungeonScale.MaxCCDurationModifier=1.0
 
-##########################
-#
+###################################################################################################
 # Misc Settings
-#
-##########################
-
-#
 #     DungeonScale.ForcedIDXX
 #        Sets MobIDs for the group they belong to.
 #        All 5-player creatures should go in DungeonScale.ForcedID5=
 #        All 10-player creatures should go in DungeonScale.ForcedID10=
 #        All X-player creatures should go in DungeonScale.ForcedIDX=
+###################################################################################################
+
 DungeonScale.ForcedID40=""
 DungeonScale.ForcedID25=""
 DungeonScale.ForcedID20=""
@@ -696,7 +671,7 @@ DungeonScale.ForcedID10=""
 DungeonScale.ForcedID5=""
 DungeonScale.ForcedID2=""
 
-#
+###################################################################################################
 #     DungeonScale.DisabledID
 #        Disable scaling on specific creatures
 #
@@ -706,23 +681,22 @@ DungeonScale.ForcedID2=""
 # 30161,30248 = Eye of Eternity
 # 35644,36558 = Trial of the Champion
 # 36838,36839 = ICC Gunship Cannons
+###################################################################################################
+
 DungeonScale.DisabledID="26499,27692,27755,27756,33062,33060,33109,30161,30248,35644,36558,36838,36839"
 
-##########################
-#
+###################################################################################################
 # Level Scaling
-#
-##########################
-
-#
 #     DungeonScale.LevelScaling
 #        Scale creatures in instances based on the highest-level player.
 #        0 = Disabled
 #        1 = Enabled (only in dungeons/raids)
 #        Default:     1
+###################################################################################################
+
 DungeonScale.LevelScaling=0
 
-#
+###################################################################################################
 #     DungeonScale.LevelScaling.Method
 #        Selects which method should be used when the level for scaled creatures.
 #
@@ -738,9 +712,11 @@ DungeonScale.LevelScaling=0
 #        Possible values: "fixed" or "dynamic"
 #
 #        Default: "dynamic"
+###################################################################################################
+
 DungeonScale.LevelScaling.Method="dynamic"
 
-#
+###################################################################################################
 #     DungeonScale.LevelScaling.SkipHigherLevels
 #        If an instance's average creature level is no more than (SkipHigherLevels) levels
 #        above the highest player level, do not scale down.
@@ -758,10 +734,12 @@ DungeonScale.LevelScaling.Method="dynamic"
 #        To disable this feature entirely and scale all lower-level instances, set this to 0.
 #
 #        Default: 5
+###################################################################################################
+
 DungeonScale.LevelScaling.SkipHigherLevels = 3
 DungeonScale.LevelScaling.SkipLowerLevels = 5
 
-#
+###################################################################################################
 #     DungeonScale.LevelScaling.DynamicLevel.Ceiling.*
 #        Sets the maximum number of levels creatures scaled in "dynamic" mode can be OVER your highest-level
 #        player. The creature in the dungeon with the highest original level will be set to the highest-level
@@ -778,6 +756,8 @@ DungeonScale.LevelScaling.SkipLowerLevels = 5
 #        Only takes effect if DungeonScale.LevelScaling.Method = "dynamic"
 #
 #        Default: 5
+###################################################################################################
+
 DungeonScale.LevelScaling.DynamicLevel.Ceiling.Dungeons = 1
 DungeonScale.LevelScaling.DynamicLevel.Floor.Dungeons = 5
 
@@ -790,7 +770,7 @@ DungeonScale.LevelScaling.DynamicLevel.Floor.Raids = 5
 DungeonScale.LevelScaling.DynamicLevel.Ceiling.HeroicRaids = 3
 DungeonScale.LevelScaling.DynamicLevel.Floor.HeroicRaids = 5
 
-#
+###################################################################################################
 #     DungeonScale.LevelScaling.DynamicLevel.PerInstance
 #        Allows setting per-instance Dynamic Level options. Specifying a value of `-1` will skip overriding of that value.
 #        You may omit entries from the end of the string if desired. Only one set of values should be specified per InstanceID.
@@ -806,9 +786,11 @@ DungeonScale.LevelScaling.DynamicLevel.Floor.HeroicRaids = 5
 #
 # 229 - Blackrock Spire
 # 230 - Blackrock Depths
+###################################################################################################
+
 DungeonScale.LevelScaling.DynamicLevel.PerInstance="229 -1 -1 1, 230 0 0"
 
-#
+###################################################################################################
 #     DungeonScale.LevelScaling.DynamicLevel.DistanceCheck.PerInstance
 #        Some dungeons contain multiple wings that exist in the same InstanceID. These wings may have different level requirements.
 #        You may set this setting per-instance to ensure that only creatures within [WorldUnits] of any player are included in the
@@ -826,31 +808,13 @@ DungeonScale.LevelScaling.DynamicLevel.PerInstance="229 -1 -1 1, 230 0 0"
 #        Default: "189 500" (Recommended adjustments)
 #
 # 189 - Scarlet Monastery
+###################################################################################################
+
 DungeonScale.LevelScaling.DynamicLevel.DistanceCheck.PerInstance="189 500"
 
-#
-#     DungeonScale.LevelScaling.LevelEndGameBoost
-#
-#        NOTICE: This setting is currently not implemented pending a rewrite.
-#                Enabling it here has NO effect.
-#
-#        See: https://github.com/azerothcore/mod-DungeonScale/issues/156
-#
-#        Old description:
-#        End game creatures have an exponential (not linear) regression
-#        that is not correctly handled by db values. Keep this enabled
-#        to have stats as near possible to the official ones.
-#
-#        Default:     0 (1 = ON, 0 = OFF)
-DungeonScale.LevelScaling.EndGameBoost = 0        # setting to 1 does not do anything
-
-##########################
+###################################################################################################
 #
 # Reward Scaling
-#
-##########################
-
-#
 #     DungeonScale.RewardScaling.Method
 #        Sets which method should be used when scaling down XP and Money in an instance.
 #
@@ -867,9 +831,11 @@ DungeonScale.LevelScaling.EndGameBoost = 0        # setting to 1 does not do any
 #        Possible values: "fixed" or "dynamic"
 #
 #        Default: "dynamic"
+###################################################################################################
+
 DungeonScale.RewardScaling.Method="dynamic"
 
-#
+###################################################################################################
 #     DungeonScale.RewardScaling.XP
 #        Scale XP based on the `DungeonScale.RewardScaling.Method` selection.
 #
@@ -884,10 +850,12 @@ DungeonScale.RewardScaling.Method="dynamic"
 #        rewarded to each player, 150xp will be rewarded.
 #
 #        Default: 1.0 (no change)
+###################################################################################################
+
 DungeonScale.RewardScaling.XP = 1
 DungeonScale.RewardScaling.XP.Modifier = 1.0
 
-#
+###################################################################################################
 #     DungeonScale.RewardScaling.Money
 #        Scale Money drops based on the `DungeonScale.RewardScaling.Method` selection. If set to 0, the full
 #        amount will be rewarded.
@@ -903,10 +871,12 @@ DungeonScale.RewardScaling.XP.Modifier = 1.0
 #        rewarded to each player, 1 gold 50 silver will be rewarded.
 #
 #        Default: 1.0 (no change)
+###################################################################################################
+
 DungeonScale.RewardScaling.Money = 1
 DungeonScale.RewardScaling.Money.Modifier = 1.0
 
-#
+###################################################################################################
 #     DungeonScale.RewardScaling.Loot
 #        Scale Loot drop chance based on the number of players in the dungeon vs the max.  If set to 0, the full
 #        chance to drop will be at play.
@@ -959,100 +929,10 @@ DungeonScale.RewardScaling.Money.Modifier = 1.0
 #		 - 49352 Cologne Neutralizer - Comes from 49631
 #		 - 49635 Court Subpoena - Comes from 49631
 #
+###################################################################################################
+
 DungeonScale.RewardScaling.Loot = 1
 DungeonScale.RewardScaling.Loot.BOPAlwaysDropException = 1
 DungeonScale.RewardScaling.Loot.ExemptContainers = 1
 DungeonScale.RewardScaling.Loot.ExemptSkinning = 1
 DungeonScale.RewardScaling.Loot.ExceptionItemIDs = 8444, 11078, 11197, 11602, 11885, 13302, 13303, 13304, 13305, 13306, 13307, 21761, 21762, 30436, 30437, 31088, 37372, 43151, 43158, 49351, 49352, 49635
-
-##########################
-#
-# Messages
-#
-##########################
-
-#
-#     DungeonScale.PlayerChangeNotify
-#        Set Auto Notifications to all players in Instance that player count has changed.
-#        Default:     1 (1 = ON, 0 = OFF)
-DungeonScale.PlayerChangeNotify=1
-
-##########################
-#
-# REWARD SYSTEM (experimental)
-#
-##########################
-
-#
-#   DungeonScale.reward.enable
-#       This is an experimental feature to reward a player that kill a boss when
-#       a pre-wotlk dungeon/raid is completed with creature levelling enabled.
-#       This is an idea to boost old contents even if you're end-game player.
-#
-#       Default:     0 (1 = ON, 0 = OFF)
-DungeonScale.reward.enable = 0
-
-
-#
-#   DungeonScale.reward.raidToken
-#   DungeonScale.reward.dungeonToken
-#
-#
-#       Default:
-#           raidToken -> emblem of frost (49426)
-#           dungeonToken -> emblem of triumph (47241)
-DungeonScale.reward.raidToken    = 49426
-DungeonScale.reward.dungeonToken = 47241
-
-#
-#   DungeonScale.reward.MinPlayerReward
-#       This conf option checks how many players are in the same
-#       map before allowing the reward to be carried out
-#       if MinPlayerReward is set to two and player is soloing this conf doesn't reward then.
-#		this will give more a challenge to players for low level instances.
-#
-#       Default:     1
-DungeonScale.reward.MinPlayerReward = 1
-
-##########################
-#
-# Announcement
-#
-##########################
-
-#
-#     DungeonScaleAnnounce.enable
-#        Announce the module on login if it is enabled
-#        Default:     1 (1 = ON, 0 = OFF)
-DungeonScaleAnnounce.enable=0
-
-##########################
-#
-# Deprecated Settings
-#
-##########################
-
-# The following variables are deprecated and should not be used in new deployments. Their values should be left blank.
-# They will still be applied to support backwards compatability, but will be removed entirely in a future release.
-# Their entire functionality (and more) has been moved to new settings referenced in this config file.
-#
-DungeonScale.enable=
-DungeonScale.PerDungeonScaling=
-DungeonScale.PerDungeonBossScaling=
-DungeonScale.BossInflectionMult=
-DungeonScale.rate.global=
-DungeonScale.rate.health=
-DungeonScale.rate.mana=
-DungeonScale.rate.armor=
-DungeonScale.rate.damage=
-DungeonScale.DungeonScaleDownXP=
-DungeonScale.DungeonScaleDownMoney=
-DungeonScale.LevelHigherOffset=
-DungeonScale.LevelLowerOffset=
-DungeonScale.PerDungeonPlayerCounts=
-
-# The following variables have been removed entirely and should not be used in a new or existing deployment.
-# Their values should be left blank.
-# Their entire functionality (and more) has been moved to new settings referenced in this config file.
-DungeonScale.DungeonsOnly=
-DungeonScale.levelUseDbValuesWhenExists=
