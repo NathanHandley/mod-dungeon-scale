@@ -10,8 +10,8 @@ This module is intended to allow dungeon scaling based on number of players (sim
 | Command | Permission | Description |
 | :------ | :--------- | :---------- |
 | `.dungeonscale setplayers` | All Players | Sets a fixed player count difficulty for the player's current dungeon instance, which doesn't change even if players join or leave. |
-| `.dungeonscale getmapstat` | All Players | Displays AB-calcualted settings for the current map, including player count, difficulty, world modifiers, and others. |
-| `.dungeonscale getcreaturestat` | All Players | Displays AB-calculated settings for the targeted dungeon creature including level scaling, difficulty, modifiers, and boss status. |
+| `.dungeonscale getmapstat` | All Players | Displays calcualted settings for the current map, including player count, difficulty, world modifiers, and others. |
+| `.dungeonscale getcreaturestat` | All Players | Displays calculated settings for the targeted dungeon creature including level scaling, difficulty, modifiers, and boss status. |
 
 ## Logger Names
 | Logger | Description |
