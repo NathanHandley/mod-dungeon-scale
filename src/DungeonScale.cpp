@@ -75,11 +75,6 @@ enum Damage_Healing_Debug_Phase {
     DUNGEONSCALE_DAMAGE_HEALING_DEBUG_PHASE_AFTER
 };
 
-struct World_Multipliers {
-    float scaled = 1.0f;
-    float unscaled = 1.0f;
-};
-
 DungeonScaleScriptMgr* DungeonScaleScriptMgr::instance()
 {
     static DungeonScaleScriptMgr instance;
@@ -198,7 +193,6 @@ public:
 
     uint8 worldMultiplierTargetLevel = 0;            // the level of the pseudo-creature that the world modifiers scale to
     float worldDamageHealingMultiplier = 1.0f;       // the damage/healing multiplier for the world (where source isn't an enemy creature)
-    float scaledWorldDamageHealingMultiplier = 1.0f; // the damage/healing multiplier for the world (where source isn't an enemy creature)
     float worldHealthMultiplier = 1.0f;              // the "health" multiplier for any destructible buildings in the map
 
     bool enabled = false;                            // should DungeonScale make any changes to this map or its creatures?
@@ -1645,20 +1639,20 @@ float getDefaultMultiplier(Map* map, DungeonScaleInflectionPointSettings inflect
     return defaultMultiplier;
 }
 
-World_Multipliers getWorldMultiplier(Map* map, BaseValueType baseValueType)
+float getWorldMultiplier(Map* map, BaseValueType baseValueType)
 {
-    World_Multipliers worldMultipliers;
+    float worldMultiplier = 1.0f;
 
     // null check
     if (!map)
     {
-        return worldMultipliers;
+        return worldMultiplier;
     }
 
     // if this isn't a dungeon, return defaults
     if (!(map->IsDungeon()))
     {
-        return worldMultipliers;
+        return worldMultiplier;
     }
 
     // grab map data
@@ -1667,19 +1661,19 @@ World_Multipliers getWorldMultiplier(Map* map, BaseValueType baseValueType)
     // if the map isn't enabled, return defaults
     if (!mapDSInfo->enabled)
     {
-        return worldMultipliers;
+        return worldMultiplier;
     }
 
     // if there are no players on the map, return defaults
     if (mapDSInfo->allMapPlayers.size() == 0)
     {
-        return worldMultipliers;
+        return worldMultiplier;
     }
 
     // if creatures haven't been counted yet, return defaults
     if (mapDSInfo->avgCreatureLevel == 0)
     {
-        return worldMultipliers;
+        return worldMultiplier;
     }
 
     // create some data variables
@@ -1691,7 +1685,6 @@ World_Multipliers getWorldMultiplier(Map* map, BaseValueType baseValueType)
 
     // Generate the default multiplier before level scaling
     // This value is only based on the adjusted number of players in the instance
-    float worldMultiplier = 1.0f;
     float defaultMultiplier = getDefaultMultiplier(map, inflectionPointSettings);
 
     LOG_DEBUG("module.DungeonScale",
@@ -1726,20 +1719,7 @@ World_Multipliers getWorldMultiplier(Map* map, BaseValueType baseValueType)
         baseValueType == BaseValueType::DUNGEONSCALE_HEALTH ? statModifiers.health : statModifiers.damage
     );
 
-    // store the unscaled multiplier
-    worldMultipliers.unscaled = worldMultiplier;
-
-    LOG_DEBUG("module.DungeonScale", "DungeonScale::getWorldMultiplier: Map {} ({}) {} | multiplier before level scaling = ({}).",
-            map->GetMapName(),
-            avgCreatureLevelRounded,
-            baseValueType == BaseValueType::DUNGEONSCALE_HEALTH ? "health" : "damage",
-            worldMultiplier
-    );
-
-    // store the (potentially) level-scaled multiplier
-    worldMultipliers.scaled = worldMultiplier;
-
-    return worldMultipliers;
+    return worldMultiplier;
 }
 
 void LoadMapSettings(Map* map)
@@ -2577,14 +2557,11 @@ bool UpdateMapDataIfNeeded(Map* map, bool force = false)
         {
             // Update World Health multiplier
             // Used for scaling damage against destructible game objects
-            World_Multipliers health = getWorldMultiplier(map, BaseValueType::DUNGEONSCALE_HEALTH);
-            mapDSInfo->worldHealthMultiplier = health.unscaled;
+            mapDSInfo->worldHealthMultiplier = getWorldMultiplier(map, BaseValueType::DUNGEONSCALE_HEALTH);
 
             // Update World Damage or Healing multiplier
             // Used for scaling damage and healing between players and/or non-creatures
-            World_Multipliers damageHealing = getWorldMultiplier(map, BaseValueType::DUNGEONSCALE_DAMAGE_HEALING);
-            mapDSInfo->worldDamageHealingMultiplier = damageHealing.unscaled;
-            mapDSInfo->scaledWorldDamageHealingMultiplier = damageHealing.scaled;
+            mapDSInfo->worldDamageHealingMultiplier = getWorldMultiplier(map, BaseValueType::DUNGEONSCALE_DAMAGE_HEALING);
         }
 
         // mark the config updated
@@ -3625,36 +3602,20 @@ class DungeonScale_UnitScript : public UnitScript
             // if the source is a player AND the target is that same player AND the value is damage (negative), use the map's multiplier
             if (source->GetTypeId() == TYPEID_PLAYER && source->GetGUID() == target->GetGUID() && amount < 0)
             {
-                // if this aura damages based on a percent of the player's max health, use the un-level-scaled multiplier
-                if (_isAuraWithEffectType(spellInfo, SPELL_AURA_PERIODIC_DAMAGE_PERCENT))
+                damageMultiplier = sourceMapDSInfo->worldDamageHealingMultiplier;
+                if (_debug_damage_and_healing)
                 {
-                    damageMultiplier = sourceMapDSInfo->worldDamageHealingMultiplier;
-                    if (_debug_damage_and_healing)
-                    {
-                        LOG_DEBUG("module.DungeonScale_DamageHealingCC", "DungeonScale_UnitScript::_Modify_Damage_Healing: Spell damage based on percent of max health. Ignore level scaling.");
-                        LOG_DEBUG("module.DungeonScale_DamageHealingCC",
-                                "DungeonScale_UnitScript::_Modify_Damage_Healing: Source is a player and the target is that same player, using the map's (level-scaling ignored) multiplier: ({})",
-                                damageMultiplier
-                        );
-                    }
-                }
-                else
-                {
-                    damageMultiplier = sourceMapDSInfo->scaledWorldDamageHealingMultiplier;
-                    if (_debug_damage_and_healing)
-                    {
-                        LOG_DEBUG("module.DungeonScale_DamageHealingCC",
-                                "DungeonScale_UnitScript::_Modify_Damage_Healing: Source is a player and the target is that same player, using the map's multiplier: ({})",
-                                damageMultiplier
-                        );
-                    }
+                    LOG_DEBUG("module.DungeonScale_DamageHealingCC",
+                            "DungeonScale_UnitScript::_Modify_Damage_Healing: Source is a player and the target is that same player, using the map's (level-scaling ignored) multiplier: ({})",
+                            damageMultiplier
+                    );
                 }
             }
             // if the target is a player AND the value is healing (positive), use the map's damage multiplier
             // (player to player healing was already eliminated in the Source and Target Checking section)
             else if (target->GetTypeId() == TYPEID_PLAYER && amount >= 0)
             {
-                damageMultiplier = targetMapDSInfo->scaledWorldDamageHealingMultiplier;
+                damageMultiplier = targetMapDSInfo->worldDamageHealingMultiplier;
                 if (_debug_damage_and_healing)
                 {
                     LOG_DEBUG("module.DungeonScale_DamageHealingCC",
@@ -3666,29 +3627,13 @@ class DungeonScale_UnitScript : public UnitScript
             // if the target is a player AND the source is not a creature, use the map's multiplier
             else if (target->GetTypeId() == TYPEID_PLAYER && source->GetTypeId() != TYPEID_UNIT && amount < 0)
             {
-                // if this aura damages based on a percent of the player's max health, use the un-level-scaled multiplier
-                if (_isAuraWithEffectType(spellInfo, SPELL_AURA_PERIODIC_DAMAGE_PERCENT))
+                damageMultiplier = targetMapDSInfo->worldDamageHealingMultiplier;
+                if (_debug_damage_and_healing)
                 {
-                    damageMultiplier = targetMapDSInfo->worldDamageHealingMultiplier;
-                    if (_debug_damage_and_healing)
-                    {
-                        LOG_DEBUG("module.DungeonScale_DamageHealingCC", "DungeonScale_UnitScript::_Modify_Damage_Healing: Spell damage based on percent of max health. Ignore level scaling.");
-                        LOG_DEBUG("module.DungeonScale_DamageHealingCC",
-                                "DungeonScale_UnitScript::_Modify_Damage_Healing: Target is a player and the source is not a creature, using the map's (level-scaling-ignored) multiplier: ({})",
-                                damageMultiplier
-                        );
-                    }
-                }
-                else
-                {
-                    damageMultiplier = targetMapDSInfo->scaledWorldDamageHealingMultiplier;
-                    if (_debug_damage_and_healing)
-                    {
-                        LOG_DEBUG("module.DungeonScale_DamageHealingCC",
-                                "DungeonScale_UnitScript::_Modify_Damage_Healing: Target is a player and the source is not a creature, using the map's multiplier: ({})",
-                                damageMultiplier
-                        );
-                    }
+                    LOG_DEBUG("module.DungeonScale_DamageHealingCC",
+                            "DungeonScale_UnitScript::_Modify_Damage_Healing: Target is a player and the source is not a creature, using the map's (level-scaling-ignored) multiplier: ({})",
+                            damageMultiplier
+                    );
                 }
             }
             // otherwise, use the source creature's damage multiplier
@@ -5722,19 +5667,9 @@ public:
             handler->PSendSysMessage("World health multiplier: {}", mapDSInfo->worldHealthMultiplier);
 
             // World Damage and Healing Multiplier
-            if (mapDSInfo->worldDamageHealingMultiplier != mapDSInfo->scaledWorldDamageHealingMultiplier)
-            {
-                handler->PSendSysMessage("World hostile damage and healing multiplier: {} -> {}",
-                        mapDSInfo->worldDamageHealingMultiplier,
-                        mapDSInfo->scaledWorldDamageHealingMultiplier
-                        );
-            }
-            else
-            {
-                handler->PSendSysMessage("World hostile damage and healing multiplier: {}",
-                        mapDSInfo->worldDamageHealingMultiplier
-                        );
-            }
+            handler->PSendSysMessage("World hostile damage and healing multiplier: {}",
+                    mapDSInfo->worldDamageHealingMultiplier
+                    );
 
             // Creature Stats
             handler->PSendSysMessage("Original Creature Level Range: {} - {} (Avg: {})",
