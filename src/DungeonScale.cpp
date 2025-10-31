@@ -223,12 +223,6 @@ public:
     float avgCreatureLevel = 0;                      // the average level of all active creatures in the map (continuously updated)
     uint32 activeCreatureCount = 0;                  // the number of creatures in the map that are included in the map's stats (not necessarily alive)
 
-    bool isLevelScalingEnabled = false;              // whether level scaling is enabled on this map
-    uint8 levelScalingSkipHigherLevels;              // used to determine if this map should scale or not
-    uint8 levelScalingSkipLowerLevels;               // used to determine if this map should scale or not
-    uint8 levelScalingDynamicCeiling;                // how many levels MORE than the highestPlayerLevel creature should be scaled to
-    uint8 levelScalingDynamicFloor;                  // how many levels LESS than the highestPlayerLevel creature should be scaled to
-
     uint8 prevMapLevel = 0;                          // used to reduce calculations when they are not necessary
 };
 
@@ -255,18 +249,6 @@ public:
     float value;
     float curveFloor;
     float curveCeiling;
-};
-
-class DungeonScaleLevelScalingDynamicLevelSettings: public DataMap::Base
-{
-public:
-    DungeonScaleLevelScalingDynamicLevelSettings() {}
-    DungeonScaleLevelScalingDynamicLevelSettings(int skipHigher, int skipLower, int ceiling, int floor) :
-        skipHigher(skipHigher), skipLower(skipLower), ceiling(ceiling), floor(floor) {}
-    int skipHigher;
-    int skipLower;
-    int ceiling;
-    int floor;
 };
 
 uint64_t GetCurrentConfigTime()
@@ -333,15 +315,8 @@ static std::map<uint32, DungeonScaleInflectionPointSettings> bossOverrides;
 static std::map<uint32, DungeonScaleStatModifiers> statModifierOverrides;
 static std::map<uint32, DungeonScaleStatModifiers> statModifierBossOverrides;
 static std::map<uint32, DungeonScaleStatModifiers> statModifierCreatureOverrides;
-static std::map<uint8, DungeonScaleLevelScalingDynamicLevelSettings> levelScalingDynamicLevelOverrides;
-static std::map<uint32, uint32> levelScalingDistanceCheckOverrides;
 
 static int8 PlayerCountDifficultyOffset;
-static bool LevelScaling;
-static int8 LevelScalingSkipHigherLevels, LevelScalingSkipLowerLevels;
-static int8 LevelScalingDynamicLevelCeilingDungeons, LevelScalingDynamicLevelFloorDungeons, LevelScalingDynamicLevelCeilingRaids, LevelScalingDynamicLevelFloorRaids;
-static int8 LevelScalingDynamicLevelCeilingHeroicDungeons, LevelScalingDynamicLevelFloorHeroicDungeons, LevelScalingDynamicLevelCeilingHeroicRaids, LevelScalingDynamicLevelFloorHeroicRaids;
-static ScalingMethod LevelScalingMethod;
 static bool Announcement;
 static bool PlayerChangeNotify;
 static float MinHPModifier, MinManaModifier, MinDamageModifier, MinCCDurationModifier, MaxCCDurationModifier;
@@ -515,40 +490,6 @@ std::map<uint32, DungeonScaleStatModifiers> LoadStatModifierOverrides(std::strin
     return overrideMap;
 }
 
-std::map<uint8, DungeonScaleLevelScalingDynamicLevelSettings> LoadDynamicLevelOverrides(std::string dungeonIdString) // Used for reading the string from the configuration file for per-dungeon dynamic level overrides
-{
-    std::string delimitedValue;
-    std::stringstream dungeonIdStream;
-    std::map<uint8, DungeonScaleLevelScalingDynamicLevelSettings> overrideMap;
-
-    dungeonIdStream.str(dungeonIdString);
-    while (std::getline(dungeonIdStream, delimitedValue, ',')) // Process each dungeon ID in the string, delimited by the comma - "," and then space " "
-    {
-        std::string val1, val2, val3, val4, val5;
-        std::stringstream dungeonStream(delimitedValue);
-        dungeonStream >> val1 >> val2 >> val3 >> val4 >> val5;
-
-        auto dungeonMapId = atoi(val1.c_str());
-
-        // Replace any missing values with -1
-        if (val2.empty()) { val2 = "-1"; }
-        if (val3.empty()) { val3 = "-1"; }
-        if (val4.empty()) { val3 = "-1"; }
-        if (val5.empty()) { val3 = "-1"; }
-
-        DungeonScaleLevelScalingDynamicLevelSettings dynamicLevelSettings = DungeonScaleLevelScalingDynamicLevelSettings(
-            atoi(val2.c_str()),
-            atoi(val3.c_str()),
-            atoi(val4.c_str()),
-            atoi(val5.c_str())
-        );
-
-        overrideMap[dungeonMapId] = dynamicLevelSettings;
-    }
-
-    return overrideMap;
-}
-
 std::map<uint32, uint32> LoadDistanceCheckOverrides(std::string dungeonIdString)
 {
     std::string delimitedValue;
@@ -606,16 +547,6 @@ bool hasStatModifierBossOverride(uint32 dungeonId)
 bool hasStatModifierCreatureOverride(uint32 creatureId)
 {
     return (statModifierCreatureOverrides.find(creatureId) != statModifierCreatureOverrides.end());
-}
-
-bool hasDynamicLevelOverride(uint32 dungeonId)
-{
-    return (levelScalingDynamicLevelOverrides.find(dungeonId) != levelScalingDynamicLevelOverrides.end());
-}
-
-bool hasLevelScalingDistanceCheckOverride(uint32 dungeonId)
-{
-    return (levelScalingDistanceCheckOverrides.find(dungeonId) != levelScalingDistanceCheckOverrides.end());
 }
 
 bool ShouldMapBeEnabled(Map* map)
@@ -1813,130 +1744,6 @@ World_Multipliers getWorldMultiplier(Map* map, BaseValueType baseValueType)
             worldMultiplier
     );
 
-    // only scale based on level if level scaling is enabled and the instance's average creature level is not within the skip range
-    if (LevelScaling &&
-            (
-                (mapDSInfo->avgCreatureLevel > mapDSInfo->highestPlayerLevel + mapDSInfo->levelScalingSkipHigherLevels || mapDSInfo->levelScalingSkipHigherLevels == 0) ||
-                (mapDSInfo->avgCreatureLevel < mapDSInfo->highestPlayerLevel - mapDSInfo->levelScalingSkipLowerLevels || mapDSInfo->levelScalingSkipLowerLevels == 0)
-            )
-        )
-    {
-        mapDSInfo->worldMultiplierTargetLevel = mapDSInfo->highestPlayerLevel;
-        LOG_DEBUG("module.DungeonScale", "DungeonScale::getWorldMultiplier: Map {} ({}) {} | level will be scaled to {}.",
-            map->GetMapName(),
-            avgCreatureLevelRounded,
-            baseValueType == BaseValueType::DUNGEONSCALE_HEALTH ? "health" : "damage",
-            mapDSInfo->worldMultiplierTargetLevel
-        );
-
-        // use creature base stats to determine how to level scale the multiplier (the map is a warrior!)
-        CreatureBaseStats const* origMapBaseStats = sObjectMgr->GetCreatureBaseStats(avgCreatureLevelRounded, Classes::CLASS_WARRIOR);
-        CreatureBaseStats const* adjustedMapBaseStats = sObjectMgr->GetCreatureBaseStats(mapDSInfo->worldMultiplierTargetLevel, Classes::CLASS_WARRIOR);
-
-        // Original Base Value
-        float originalBaseValue;
-
-        if (baseValueType == BaseValueType::DUNGEONSCALE_HEALTH) // health
-        {
-            originalBaseValue = getBaseExpansionValueForLevel(
-                origMapBaseStats->BaseHealth,
-                avgCreatureLevelRounded
-            );
-        }
-        else // damage
-        {
-            originalBaseValue = getBaseExpansionValueForLevel(
-                origMapBaseStats->BaseDamage,
-                avgCreatureLevelRounded
-            );
-        }
-
-        LOG_DEBUG("module.DungeonScale", "DungeonScale::getWorldMultiplier: Map {} ({}) {} | base is {}.",
-            map->GetMapName(),
-            avgCreatureLevelRounded,
-            baseValueType == BaseValueType::DUNGEONSCALE_HEALTH ? "health" : "damage",
-            originalBaseValue
-        );
-
-        // New Base Value
-        float newBaseValue;
-
-        if (baseValueType == BaseValueType::DUNGEONSCALE_HEALTH) // health
-        {
-            newBaseValue = getBaseExpansionValueForLevel(
-                adjustedMapBaseStats->BaseHealth,
-                mapDSInfo->worldMultiplierTargetLevel
-            );
-        }
-        else // damage
-        {
-            newBaseValue = getBaseExpansionValueForLevel(
-                adjustedMapBaseStats->BaseDamage,
-                mapDSInfo->worldMultiplierTargetLevel
-            );
-        }
-
-        LOG_DEBUG("module.DungeonScale", "DungeonScale::getWorldMultiplier: Map {} ({}->{}) {} | base is {}.",
-            map->GetMapName(),
-            avgCreatureLevelRounded,
-            mapDSInfo->worldMultiplierTargetLevel,
-            baseValueType == BaseValueType::DUNGEONSCALE_HEALTH ? "health" : "damage",
-            newBaseValue
-        );
-
-        // update the world multiplier accordingly
-        worldMultiplier *= newBaseValue / originalBaseValue;
-
-        LOG_DEBUG("module.DungeonScale", "DungeonScale::getWorldMultiplier: Map {} ({}->{}) {} | worldMultiplier ({}) = worldMultiplier ({}) * newBaseValue ({}) / originalBaseValue ({})",
-            map->GetMapName(),
-            mapDSInfo->avgCreatureLevel,
-            mapDSInfo->worldMultiplierTargetLevel,
-            baseValueType == BaseValueType::DUNGEONSCALE_HEALTH ? "health" : "damage",
-            worldMultiplier,
-            worldMultiplier,
-            newBaseValue,
-            originalBaseValue
-        );
-
-        LOG_DEBUG("module.DungeonScale", "DungeonScale::getWorldMultiplier: Map {} ({}->{}) {} | multiplier after level scaling = ({}).",
-                map->GetMapName(),
-                avgCreatureLevelRounded,
-                mapDSInfo->worldMultiplierTargetLevel,
-                baseValueType == BaseValueType::DUNGEONSCALE_HEALTH ? "health" : "damage",
-                worldMultiplier
-        );
-    }
-    else
-    {
-        mapDSInfo->worldMultiplierTargetLevel = avgCreatureLevelRounded;
-
-        // level scaling is disabled
-        if (!LevelScaling)
-        {
-            LOG_DEBUG("module.DungeonScale", "DungeonScale::getWorldMultiplier: Map {} ({}) | not level scaled due to level scaling being disabled. World multiplier target level set to avgCreatureLevel ({}).",
-                map->GetMapName(),
-                mapDSInfo->worldMultiplierTargetLevel,
-                mapDSInfo->worldMultiplierTargetLevel
-            );
-        }
-        // inside the level skip range
-        else
-        {
-            LOG_DEBUG("module.DungeonScale", "DungeonScale::getWorldMultiplier: Map {} ({}) | not level scaled due to being inside the level skip range. World multiplier target level set to avgCreatureLevel ({}).",
-                map->GetMapName(),
-                mapDSInfo->worldMultiplierTargetLevel,
-                mapDSInfo->worldMultiplierTargetLevel
-            );
-        }
-
-        LOG_DEBUG("module.DungeonScale", "DungeonScale::getWorldMultiplier: Map {} ({}) {} | multiplier after level scaling = ({}).",
-                map->GetMapName(),
-                mapDSInfo->worldMultiplierTargetLevel,
-                baseValueType == BaseValueType::DUNGEONSCALE_HEALTH ? "health" : "damage",
-                worldMultiplier
-        );
-    }
-
     // store the (potentially) level-scaled multiplier
     worldMultipliers.scaled = worldMultiplier;
 
@@ -1993,84 +1800,6 @@ void LoadMapSettings(Map* map)
         instanceMap->IsHeroic() ? "Heroic" : "Normal",
         mapDSInfo->minPlayers
     );
-
-    //
-    // Dynamic Level Scaling Floor and Ceiling
-    //
-
-    // 5-player normal dungeons
-    if (instanceMap->GetMaxPlayers() <= 5 && !instanceMap->IsHeroic())
-    {
-        mapDSInfo->levelScalingDynamicCeiling = LevelScalingDynamicLevelCeilingDungeons;
-        mapDSInfo->levelScalingDynamicFloor = LevelScalingDynamicLevelFloorDungeons;
-
-    }
-    // 5-player heroic dungeons
-    else if (instanceMap->GetMaxPlayers() <= 5 && instanceMap->IsHeroic())
-    {
-        mapDSInfo->levelScalingDynamicCeiling = LevelScalingDynamicLevelCeilingHeroicDungeons;
-        mapDSInfo->levelScalingDynamicFloor = LevelScalingDynamicLevelFloorHeroicDungeons;
-    }
-    // Normal raids
-    else if (instanceMap->GetMaxPlayers() > 5 && !instanceMap->IsHeroic())
-    {
-        mapDSInfo->levelScalingDynamicCeiling = LevelScalingDynamicLevelCeilingRaids;
-        mapDSInfo->levelScalingDynamicFloor = LevelScalingDynamicLevelFloorRaids;
-    }
-    // Heroic raids
-    else if (instanceMap->GetMaxPlayers() > 5 && instanceMap->IsHeroic())
-    {
-        mapDSInfo->levelScalingDynamicCeiling = LevelScalingDynamicLevelCeilingHeroicRaids;
-        mapDSInfo->levelScalingDynamicFloor = LevelScalingDynamicLevelFloorHeroicRaids;
-    }
-    // something went wrong
-    else
-    {
-        LOG_ERROR("module.DungeonScale", "DungeonScale::LoadMapSettings: Map {} ({}{}, {}-player {}) | Unable to determine dynamic scaling floor and ceiling for instance.",
-            map->GetMapName(),
-            map->GetId(),
-            map->GetInstanceId() ? "-" + std::to_string(map->GetInstanceId()) : "",
-            instanceMap->GetMaxPlayers(),
-            instanceMap->IsHeroic() ? "Heroic" : "Normal"
-        );
-
-        mapDSInfo->levelScalingDynamicCeiling = 3;
-        mapDSInfo->levelScalingDynamicFloor = 5;
-
-    }
-
-    //
-    // Level Scaling Skip Levels
-    //
-
-    // Load the global settings into the map
-    mapDSInfo->levelScalingSkipHigherLevels = LevelScalingSkipHigherLevels;
-    mapDSInfo->levelScalingSkipLowerLevels = LevelScalingSkipLowerLevels;
-
-    //
-    // Per-instance overrides, if applicable
-    //
-
-    if (hasDynamicLevelOverride(map->GetId()))
-    {
-        DungeonScaleLevelScalingDynamicLevelSettings* myDynamicLevelSettings = &levelScalingDynamicLevelOverrides[map->GetId()];
-
-        // LevelScaling.SkipHigherLevels
-        if (myDynamicLevelSettings->skipHigher != -1)
-            mapDSInfo->levelScalingSkipHigherLevels = myDynamicLevelSettings->skipHigher;
-
-        // LevelScaling.SkipLowerLevels
-        if (myDynamicLevelSettings->skipLower != -1)
-            mapDSInfo->levelScalingSkipLowerLevels = myDynamicLevelSettings->skipLower;
-
-        // LevelScaling.DynamicLevelCeiling
-        if (myDynamicLevelSettings->ceiling != -1)
-            mapDSInfo->levelScalingDynamicCeiling = myDynamicLevelSettings->ceiling;
-
-        // LevelScaling.DynamicLevelFloor
-        if (myDynamicLevelSettings->floor != -1)
-            mapDSInfo->levelScalingDynamicFloor = myDynamicLevelSettings->floor;
-    }
 }
 
 void AddCreatureToMapCreatureList(Creature* creature, bool addToCreatureList = true, bool forceRecalculation = false)
@@ -2378,44 +2107,7 @@ void AddCreatureToMapCreatureList(Creature* creature, bool addToCreatureList = t
                     isIncludedInMapStats = false;
                     break;
                 }
-            }
-
-            // perform the distance check if an override is configured for this map
-            if (hasLevelScalingDistanceCheckOverride(instanceMap->GetId()))
-            {
-                uint32 distance = levelScalingDistanceCheckOverrides[instanceMap->GetId()];
-                bool isPlayerWithinDistance = false;
-
-                for (std::vector<Player*>::const_iterator playerIterator = mapDSInfo->allMapPlayers.begin(); playerIterator != mapDSInfo->allMapPlayers.end(); ++playerIterator)
-                {
-                    Player* thisPlayer = *playerIterator;
-
-                    // if this player is a Game Master, skip
-                    if (thisPlayer->IsGameMaster())
-                    {
-                        continue;
-                    }
-
-                    if (thisPlayer->IsWithinDist(creature, 500))
-                    {
-                        LOG_DEBUG("module.DungeonScale", "DungeonScale::AddCreatureToMapCreatureList: Creature {} ({}) | is in range ({} world units) of player {} and is considered active.", creature->GetName(), creatureDSInfo->UnmodifiedLevel, distance, thisPlayer->GetName());
-                        isPlayerWithinDistance = true;
-                        break;
-                    }
-                    else
-                    {
-                        LOG_DEBUG("module.DungeonScale", "DungeonScale::AddCreatureToMapCreatureList: Creature {} ({}) | is NOT in range ({} world units) of any player and is NOT considered active.",
-                            creature->GetName(),
-                            creatureDSInfo->UnmodifiedLevel,
-                            distance
-                        );
-                    }
-                }
-
-                // if no players were within the distance, don't include this creature in the map stats
-                if (!isPlayerWithinDistance)
-                    isIncludedInMapStats = false;
-            }
+            }            
         }
     }
 
@@ -2889,76 +2581,6 @@ bool UpdateMapDataIfNeeded(Map* map, bool force = false)
         // update the map's player stats
         UpdateMapPlayerStats(map);
 
-        // if LevelScaling is disabled OR if the average creature level is inside the skip range,
-        // set the map level to the average creature level, rounded to the nearest integer
-        if (!LevelScaling ||
-            ((mapDSInfo->avgCreatureLevel <= mapDSInfo->highestPlayerLevel + mapDSInfo->levelScalingSkipHigherLevels && mapDSInfo->levelScalingSkipHigherLevels != 0) &&
-            (mapDSInfo->avgCreatureLevel >= mapDSInfo->highestPlayerLevel - mapDSInfo->levelScalingSkipLowerLevels && mapDSInfo->levelScalingSkipLowerLevels != 0))
-        )
-        {
-            mapDSInfo->prevMapLevel = mapDSInfo->mapLevel;
-            mapDSInfo->mapLevel = (uint8)(mapDSInfo->avgCreatureLevel + 0.5f);
-            mapDSInfo->isLevelScalingEnabled = false;
-
-            // only log if the mapLevel has changed
-            if (mapDSInfo->prevMapLevel != mapDSInfo->mapLevel)
-            {
-                LOG_DEBUG("module.DungeonScale", "DungeonScale::UpdateMapDataIfNeeded: Map {} ({}{}, {}-player {}) | Level scaling is disabled. Map level tracking stat updated {}{} (original level).",
-                    map->GetMapName(),
-                    map->GetId(),
-                    map->GetInstanceId() ? "-" + std::to_string(map->GetInstanceId()) : "",
-                    map->ToInstanceMap()->GetMaxPlayers(),
-                    map->ToInstanceMap()->IsHeroic() ? "Heroic" : "Normal",
-                    mapDSInfo->mapLevel != mapDSInfo->prevMapLevel ? std::to_string(mapDSInfo->prevMapLevel) + "->" : "",
-                    mapDSInfo->mapLevel
-                );
-            }
-
-        }
-        // If the average creature level is lower than the highest player level,
-        // set the map level to the average creature level, rounded to the nearest integer
-        else if (mapDSInfo->avgCreatureLevel <= mapDSInfo->highestPlayerLevel)
-        {
-            mapDSInfo->prevMapLevel = mapDSInfo->mapLevel;
-            mapDSInfo->mapLevel = (uint8)(mapDSInfo->avgCreatureLevel + 0.5f);
-            mapDSInfo->isLevelScalingEnabled = true;
-
-            // only log if the mapLevel has changed
-            if (mapDSInfo->prevMapLevel != mapDSInfo->mapLevel)
-            {
-                LOG_DEBUG("module.DungeonScale", "DungeonScale::UpdateMapDataIfNeeded: Map {} ({}{}, {}-player {}) | Level scaling is enabled. Map level updated ({}{}) (average creature level).",
-                    map->GetMapName(),
-                    map->GetId(),
-                    map->GetInstanceId() ? "-" + std::to_string(map->GetInstanceId()) : "",
-                    map->ToInstanceMap()->GetMaxPlayers(),
-                    map->ToInstanceMap()->IsHeroic() ? "Heroic" : "Normal",
-                    mapDSInfo->mapLevel != mapDSInfo->prevMapLevel ? std::to_string(mapDSInfo->prevMapLevel) + "->" : "",
-                    mapDSInfo->mapLevel
-                );
-            }
-        }
-        // caps at the highest player level
-        else
-        {
-            mapDSInfo->prevMapLevel = mapDSInfo->mapLevel;
-            mapDSInfo->mapLevel = mapDSInfo->highestPlayerLevel;
-            mapDSInfo->isLevelScalingEnabled = true;
-
-            // only log if the mapLevel has changed
-            if (mapDSInfo->prevMapLevel != mapDSInfo->mapLevel)
-            {
-                LOG_DEBUG("module.DungeonScale", "DungeonScale::UpdateMapDataIfNeeded: Map {} ({}{}, {}-player {}) | Lcaling is enabled. Map level updated ({}{}) (highest player level).",
-                    map->GetMapName(),
-                    map->GetId(),
-                    map->GetInstanceId() ? "-" + std::to_string(map->GetInstanceId()) : "",
-                    map->ToInstanceMap()->GetMaxPlayers(),
-                    map->ToInstanceMap()->IsHeroic() ? "Heroic" : "Normal",
-                    mapDSInfo->mapLevel != mapDSInfo->prevMapLevel ? std::to_string(mapDSInfo->prevMapLevel) + "->" : "",
-                    mapDSInfo->mapLevel
-                );
-            }
-        }
-
         // World multipliers only need to be updated if the mapLevel has changed OR if the map config is out of date
         if (mapDSInfo->prevMapLevel != mapDSInfo->mapLevel || isMapConfigOutOfDate)
         {
@@ -3072,8 +2694,6 @@ class DungeonScale_WorldScript : public WorldScript
         statModifierOverrides.clear();
         statModifierBossOverrides.clear();
         statModifierCreatureOverrides.clear();
-        levelScalingDynamicLevelOverrides.clear();
-        levelScalingDistanceCheckOverrides.clear();
 
         LoadForcedCreatureIdsFromString(sConfigMgr->GetOption<std::string>("DungeonScale.ForcedID40", ""), 40);
         LoadForcedCreatureIdsFromString(sConfigMgr->GetOption<std::string>("DungeonScale.ForcedID25", ""), 25);
@@ -3115,14 +2735,6 @@ class DungeonScale_WorldScript : public WorldScript
 
         statModifierCreatureOverrides = LoadStatModifierOverrides(
             sConfigMgr->GetOption<std::string>("DungeonScale.StatModifier.PerCreature", "", false)
-        );
-
-        levelScalingDynamicLevelOverrides = LoadDynamicLevelOverrides(
-            sConfigMgr->GetOption<std::string>("DungeonScale.LevelScaling.DynamicLevel.PerInstance", "", false)
-        );
-
-        levelScalingDistanceCheckOverrides = LoadDistanceCheckOverrides(
-            sConfigMgr->GetOption<std::string>("DungeonScale.LevelScaling.DynamicLevel.DistanceCheck.PerInstance", "", false)
         );
 
         // DungeonScale.Enable.*
@@ -3374,36 +2986,6 @@ class DungeonScale_WorldScript : public WorldScript
         MinDamageModifier = sConfigMgr->GetOption<float>("DungeonScale.MinDamageModifier", 0.01f);
         MinCCDurationModifier = sConfigMgr->GetOption<float>("DungeonScale.MinCCDurationModifier", 0.25f);
         MaxCCDurationModifier = sConfigMgr->GetOption<float>("DungeonScale.MaxCCDurationModifier", 1.0f);
-
-        // LevelScaling.*
-        LevelScaling = sConfigMgr->GetOption<bool>("DungeonScale.LevelScaling", true);
-
-        std::string LevelScalingMethodString = sConfigMgr->GetOption<std::string>("DungeonScale.LevelScaling.Method", "dynamic", false);
-        if (LevelScalingMethodString == "fixed")
-        {
-            LevelScalingMethod = DUNGEONSCALE_SCALING_FIXED;
-        }
-        else if (LevelScalingMethodString == "dynamic")
-        {
-            LevelScalingMethod = DUNGEONSCALE_SCALING_DYNAMIC;
-        }
-        else
-        {
-            LOG_ERROR("server.loading", "mod-autobalance: invalid value `{}` for `DungeonScale.LevelScaling.Method` defined in `DungeonScale.conf`. Defaulting to a value of `dynamic`.", LevelScalingMethodString);
-            LevelScalingMethod = DUNGEONSCALE_SCALING_DYNAMIC;
-        }
-
-        LevelScalingSkipHigherLevels = sConfigMgr->GetOption<uint8>("DungeonScale.LevelScaling.SkipHigherLevels", sConfigMgr->GetOption<uint32>("DungeonScale.LevelHigherOffset", 3, false), true);
-        LevelScalingSkipLowerLevels = sConfigMgr->GetOption<uint8>("DungeonScale.LevelScaling.SkipLowerLevels", sConfigMgr->GetOption<uint32>("DungeonScale.LevelLowerOffset", 5, false), true);
-
-        LevelScalingDynamicLevelCeilingDungeons = sConfigMgr->GetOption<uint8>("DungeonScale.LevelScaling.DynamicLevel.Ceiling.Dungeons", 1);
-        LevelScalingDynamicLevelFloorDungeons = sConfigMgr->GetOption<uint8>("DungeonScale.LevelScaling.DynamicLevel.Floor.Dungeons", 5);
-        LevelScalingDynamicLevelCeilingHeroicDungeons = sConfigMgr->GetOption<uint8>("DungeonScale.LevelScaling.DynamicLevel.Ceiling.HeroicDungeons", 2);
-        LevelScalingDynamicLevelFloorHeroicDungeons = sConfigMgr->GetOption<uint8>("DungeonScale.LevelScaling.DynamicLevel.Floor.HeroicDungeons", 5);
-        LevelScalingDynamicLevelCeilingRaids = sConfigMgr->GetOption<uint8>("DungeonScale.LevelScaling.DynamicLevel.Ceiling.Raids", 3);
-        LevelScalingDynamicLevelFloorRaids = sConfigMgr->GetOption<uint8>("DungeonScale.LevelScaling.DynamicLevel.Floor.Raids", 5);
-        LevelScalingDynamicLevelCeilingHeroicRaids = sConfigMgr->GetOption<uint8>("DungeonScale.LevelScaling.DynamicLevel.Ceiling.HeroicRaids", 3);
-        LevelScalingDynamicLevelFloorHeroicRaids = sConfigMgr->GetOption<uint8>("DungeonScale.LevelScaling.DynamicLevel.Floor.HeroicRaids", 5);
 
         // RewardScaling.*
         RewardScalingExceptionItemIDs = ParseIntsFromString(sConfigMgr->GetOption<std::string>("DungeonScale.RewardScaling.Loot.ExceptionItemIDs", ""));
@@ -5340,97 +4922,7 @@ public:
             return;
 
         // only scale levels if level scaling is enabled and the instance's average creature level is not within the skip range
-        if
-        (
-            LevelScaling &&
-            (
-                (mapDSInfo->avgCreatureLevel > mapDSInfo->highestPlayerLevel + mapDSInfo->levelScalingSkipHigherLevels || mapDSInfo->levelScalingSkipHigherLevels == 0) ||
-                (mapDSInfo->avgCreatureLevel < mapDSInfo->highestPlayerLevel - mapDSInfo->levelScalingSkipLowerLevels || mapDSInfo->levelScalingSkipLowerLevels == 0)
-            ) &&
-            !creatureDSInfo->neverLevelScale
-        )
-        {
-            uint8 selectedLevel;
-
-            // handle "special" creatures
-            // note that these already passed a more complex check above
-            if (
-                (creature->IsTotem() && creature->IsSummon() && creatureDSInfo->summoner && creatureDSInfo->summoner->IsPlayer()) ||
-                (
-                    creature->IsCritter() && creatureDSInfo->UnmodifiedLevel <= 5 && creature->GetMaxHealth() <= 100
-                )
-            )
-            {
-                LOG_DEBUG("module.DungeonScale", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | is a {} that will not be level scaled, but will have modifiers set.",
-                            creature->GetName(),
-                            creatureDSInfo->UnmodifiedLevel,
-                            creature->IsTotem() ? "totem" : "critter"
-                );
-
-                selectedLevel = creatureDSInfo->UnmodifiedLevel;
-            }
-            // if we're using dynamic scaling, calculate the creature's level based relative to the highest player level in the map
-            else if (LevelScalingMethod == DUNGEONSCALE_SCALING_DYNAMIC)
-            {
-                // calculate the creature's new level
-                selectedLevel = (mapDSInfo->highestPlayerLevel + mapDSInfo->levelScalingDynamicCeiling) - (mapDSInfo->highestCreatureLevel - creatureDSInfo->UnmodifiedLevel);
-
-                // check to be sure that the creature's new level is at least the dynamic scaling floor
-                if (selectedLevel < (mapDSInfo->highestPlayerLevel - mapDSInfo->levelScalingDynamicFloor))
-                {
-                    selectedLevel = mapDSInfo->highestPlayerLevel - mapDSInfo->levelScalingDynamicFloor;
-                }
-
-                // check to be sure that the creature's new level is no higher than the dynamic scaling ceiling
-                if (selectedLevel > (mapDSInfo->highestPlayerLevel + mapDSInfo->levelScalingDynamicCeiling))
-                {
-                    selectedLevel = mapDSInfo->highestPlayerLevel + mapDSInfo->levelScalingDynamicCeiling;
-                }
-
-                LOG_DEBUG("module.DungeonScale", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | scaled to level ({}) via dynamic scaling.",
-                            creature->GetName(),
-                            creatureDSInfo->UnmodifiedLevel,
-                            selectedLevel
-                );
-            }
-            // otherwise we're using "fixed" scaling and should use the highest player level in the map
-            else
-            {
-                selectedLevel = mapDSInfo->highestPlayerLevel;
-                LOG_DEBUG("module.DungeonScale", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | scaled to level ({}) via fixed scaling.", creature->GetName(), creatureDSInfo->UnmodifiedLevel, selectedLevel);
-            }
-
-            creatureDSInfo->selectedLevel = selectedLevel;
-
-            if (creature->GetLevel() != selectedLevel)
-            {
-                if (!creatureDSInfo->isBrandNew)
-                {
-                    LOG_DEBUG("module.DungeonScale", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | is set to new selectedLevel ({}).",
-                                creature->GetName(),
-                                creatureDSInfo->UnmodifiedLevel,
-                                selectedLevel
-                    );
-
-                    creature->SetLevel(selectedLevel);
-                }
-            }
-        }
-        else if (!LevelScaling)
-        {
-            LOG_DEBUG("module.DungeonScale", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | not level scaled due to level scaling being disabled.", creature->GetName(), creatureDSInfo->UnmodifiedLevel);
-            creatureDSInfo->selectedLevel = creatureDSInfo->UnmodifiedLevel;
-        }
-        else if (creatureDSInfo->neverLevelScale)
-        {
-            LOG_DEBUG("module.DungeonScale", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | not level scaled due to being marked as multipliers only.", creature->GetName(), creatureDSInfo->UnmodifiedLevel);
-            creatureDSInfo->selectedLevel = creatureDSInfo->UnmodifiedLevel;
-        }
-        else
-        {
-            LOG_DEBUG("module.DungeonScale", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | not level scaled due the instance's average creature level being inside the skip range.", creature->GetName(), creatureDSInfo->UnmodifiedLevel);
-            creatureDSInfo->selectedLevel = creatureDSInfo->UnmodifiedLevel;
-        }
+        creatureDSInfo->selectedLevel = creatureDSInfo->UnmodifiedLevel;
 
         if (creatureDSInfo->isBrandNew)
         {
@@ -5504,96 +4996,32 @@ public:
         // set the non-level-scaled health multiplier on the creature's DS info
         creatureDSInfo->HealthMultiplier = healthMultiplier;
 
-        // only level scale health if level scaling is enabled and the creature level has been altered
-        if (LevelScaling && creatureDSInfo->selectedLevel != creatureDSInfo->UnmodifiedLevel)
-        {
-            // the max health that the creature had before we did anything with it
-            float origHealth = origCreatureBaseStats->GenerateHealth(creatureTemplate);
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | origHealth ({}) = origCreatureBaseStats->GenerateHealth(creatureTemplate)",
-                        creature->GetName(),
-                        creatureDSInfo->selectedLevel,
-                        origHealth
-            );
+        // the non-level-scaled health multiplier is the same as the level-scaled health multiplier
+        scaledHealthMultiplier = healthMultiplier;
+        LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | scaledHealthMultiplier ({}) = healthMultiplier ({})",
+                    creature->GetName(),
+                    creatureDSInfo->selectedLevel,
+                    scaledHealthMultiplier,
+                    healthMultiplier
+        );
 
-            // the base health of the new creature level for this creature's class
-            // uses a custom smoothing formula to smooth transitions between expansions
-            float newBaseHealth = getBaseExpansionValueForLevel(newCreatureBaseStats->BaseHealth, mapDSInfo->highestPlayerLevel);
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | newBaseHealth ({}) = getBaseExpansionValueForLevel(newCreatureBaseStats->BaseHealth, mapDSInfo->highestPlayerLevel ({}))",
-                        creature->GetName(),
-                        creatureDSInfo->selectedLevel,
-                        newBaseHealth,
-                        mapDSInfo->highestPlayerLevel
-            );
+        // the original health of the creature
+        uint32 origHealth = origCreatureBaseStats->GenerateHealth(creatureTemplate);
+        LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | origHealth ({}) = origCreatureBaseStats->GenerateHealth(creatureTemplate)",
+                    creature->GetName(),
+                    creatureDSInfo->selectedLevel,
+                    origHealth
+        );
 
-            // the health of the creature at its new level (before per-player scaling)
-            float newHealth = newBaseHealth * creatureTemplate->ModHealth;
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | newHealth ({}) = newBaseHealth ({}) * creature ModHealth ({})",
-                        creature->GetName(),
-                        creatureDSInfo->selectedLevel,
-                        newHealth,
-                        newBaseHealth,
-                        creatureTemplate->ModHealth
-            );
-
-            // the multiplier that would need to be applied to the creature's original health to get the new level's health (before per-player scaling)
-            float newHealthMultiplier = newHealth / origHealth;
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | newHealthMultiplier ({}) = newHealth ({}) / origHealth ({})",
-                        creature->GetName(),
-                        creatureDSInfo->selectedLevel,
-                        newHealthMultiplier,
-                        newHealth,
-                        origHealth
-            );
-
-            // the multiplier that would need to be applied to the creature's original health to get the new level's health (after per-player scaling)
-            scaledHealthMultiplier = healthMultiplier * newHealthMultiplier;
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | scaledHealthMultiplier ({}) = healthMultiplier ({}) * newHealthMultiplier ({})",
-                        creature->GetName(),
-                        creatureDSInfo->selectedLevel,
-                        scaledHealthMultiplier,
-                        healthMultiplier,
-                        newHealthMultiplier
-            );
-
-            // the actual health value to be applied to the level-scaled and player-scaled creature
-            newFinalHealth = round(origHealth * scaledHealthMultiplier);
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | newFinalHealth ({}) = origHealth ({}) * scaledHealthMultiplier ({})",
-                        creature->GetName(),
-                        creatureDSInfo->selectedLevel,
-                        newFinalHealth,
-                        origHealth,
-                        scaledHealthMultiplier
-            );
-        }
-        else
-        {
-            // the non-level-scaled health multiplier is the same as the level-scaled health multiplier
-            scaledHealthMultiplier = healthMultiplier;
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | scaledHealthMultiplier ({}) = healthMultiplier ({})",
-                        creature->GetName(),
-                        creatureDSInfo->selectedLevel,
-                        scaledHealthMultiplier,
-                        healthMultiplier
-            );
-
-            // the original health of the creature
-            uint32 origHealth = origCreatureBaseStats->GenerateHealth(creatureTemplate);
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | origHealth ({}) = origCreatureBaseStats->GenerateHealth(creatureTemplate)",
-                        creature->GetName(),
-                        creatureDSInfo->selectedLevel,
-                        origHealth
-            );
-
-            // the actual health value to be applied to the player-scaled creature
-            newFinalHealth = round(origHealth * creatureDSInfo->HealthMultiplier);
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | newFinalHealth ({}) = origHealth ({}) * HealthMultiplier ({})",
-                        creature->GetName(),
-                        creatureDSInfo->selectedLevel,
-                        newFinalHealth,
-                        origHealth,
-                        creatureDSInfo->HealthMultiplier
-            );
-        }
+        // the actual health value to be applied to the player-scaled creature
+        newFinalHealth = round(origHealth * creatureDSInfo->HealthMultiplier);
+        LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | newFinalHealth ({}) = origHealth ({}) * HealthMultiplier ({})",
+                    creature->GetName(),
+                    creatureDSInfo->selectedLevel,
+                    newFinalHealth,
+                    origHealth,
+                    creatureDSInfo->HealthMultiplier
+        );
 
         //
         //  Mana Scaling
@@ -5652,85 +5080,32 @@ public:
                         creatureDSInfo->ManaMultiplier
             );
 
-            // only level scale mana if level scaling is enabled and the creature level has been altered
-            if (LevelScaling && creatureDSInfo->selectedLevel != creatureDSInfo->UnmodifiedLevel)
-            {
-                // the max mana that the creature had before we did anything with it
-                uint32 origMana = origCreatureBaseStats->GenerateMana(creatureTemplate);
-                LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | origMana ({}) = origCreatureBaseStats->GenerateMana(creatureTemplate)",
-                            creature->GetName(),
-                            creatureDSInfo->selectedLevel,
-                            origMana
-                );
+            // scaled mana multiplier is the same as the non-level-scaled mana multiplier
+            scaledManaMultiplier = manaMultiplier;
+            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | scaledManaMultiplier ({}) = manaMultiplier ({})",
+                        creature->GetName(),
+                        creatureDSInfo->selectedLevel,
+                        scaledManaMultiplier,
+                        manaMultiplier
+            );
 
-                // the max mana that the creature would have at its new level
-                // there is no per-expansion adjustment for mana
-                uint32 newMana = newCreatureBaseStats->GenerateMana(creatureTemplate);
-                LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | newMana ({}) = newCreatureBaseStats->GenerateMana(creatureTemplate)",
-                            creature->GetName(),
-                            creatureDSInfo->selectedLevel,
-                            newMana
-                );
+            // the original mana of the creature
+            uint32 origMana = origCreatureBaseStats->GenerateMana(creatureTemplate);
+            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | origMana ({}) = origCreatureBaseStats->GenerateMana(creatureTemplate)",
+                        creature->GetName(),
+                        creatureDSInfo->selectedLevel,
+                        origMana
+            );
 
-                // the multiplier that would need to be applied to the creature's original mana to get the new level's mana (before per-player scaling)
-                float newManaMultiplier = (float)newMana / (float)origMana;
-                LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | newManaMultiplier ({}) = newMana ({}) / origMana ({})",
-                            creature->GetName(),
-                            creatureDSInfo->selectedLevel,
-                            newManaMultiplier,
-                            newMana,
-                            origMana
-                );
-
-                // the multiplier that would need to be applied to the creature's original mana to get the new level's mana (after per-player scaling)
-                scaledManaMultiplier = manaMultiplier * newManaMultiplier;
-                LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | scaledManaMultiplier ({}) = manaMultiplier ({}) * newManaMultiplier ({})",
-                            creature->GetName(),
-                            creatureDSInfo->selectedLevel,
-                            scaledManaMultiplier,
-                            manaMultiplier,
-                            newManaMultiplier
-                );
-
-                // the actual mana value to be applied to the level-scaled and player-scaled creature
-                newFinalMana = round(origMana * scaledManaMultiplier);
-                LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | newFinalMana ({}) = origMana ({}) * scaledManaMultiplier ({})",
-                            creature->GetName(),
-                            creatureDSInfo->selectedLevel,
-                            newFinalMana,
-                            origMana,
-                            scaledManaMultiplier
-                );
-            }
-            else
-            {
-                // scaled mana multiplier is the same as the non-level-scaled mana multiplier
-                scaledManaMultiplier = manaMultiplier;
-                LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | scaledManaMultiplier ({}) = manaMultiplier ({})",
-                            creature->GetName(),
-                            creatureDSInfo->selectedLevel,
-                            scaledManaMultiplier,
-                            manaMultiplier
-                );
-
-                // the original mana of the creature
-                uint32 origMana = origCreatureBaseStats->GenerateMana(creatureTemplate);
-                LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | origMana ({}) = origCreatureBaseStats->GenerateMana(creatureTemplate)",
-                            creature->GetName(),
-                            creatureDSInfo->selectedLevel,
-                            origMana
-                );
-
-                // the actual mana value to be applied to the player-scaled creature
-                newFinalMana = round(origMana * creatureDSInfo->ManaMultiplier);
-                LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | newFinalMana ({}) = origMana ({}) * creatureDSInfo->ManaMultiplier ({})",
-                            creature->GetName(),
-                            creatureDSInfo->selectedLevel,
-                            newFinalMana,
-                            origMana,
-                            creatureDSInfo->ManaMultiplier
-                );
-            }
+            // the actual mana value to be applied to the player-scaled creature
+            newFinalMana = round(origMana * creatureDSInfo->ManaMultiplier);
+            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | newFinalMana ({}) = origMana ({}) * creatureDSInfo->ManaMultiplier ({})",
+                        creature->GetName(),
+                        creatureDSInfo->selectedLevel,
+                        newFinalMana,
+                        origMana,
+                        creatureDSInfo->ManaMultiplier
+            );
         }
 
         //
@@ -5756,85 +5131,32 @@ public:
         // set the non-level-scaled armor multiplier on the creature's DS info
         creatureDSInfo->ArmorMultiplier = armorMultiplier;
 
-        // only level scale armor if level scaling is enabled and the creature level has been altered
-        if (LevelScaling && creatureDSInfo->selectedLevel != creatureDSInfo->UnmodifiedLevel)
-        {
-            // the armor that the creature had before we did anything with it
-            uint32 origArmor = origCreatureBaseStats->GenerateArmor(creatureTemplate);
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | origArmor ({}) = origCreatureBaseStats->GenerateArmor(creatureTemplate)",
-                        creature->GetName(),
-                        creatureDSInfo->selectedLevel,
-                        origArmor
-            );
+        // Scaled armor multiplier is the same as the non-level-scaled armor multiplier
+        scaledArmorMultiplier = armorMultiplier;
+        LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | scaledArmorMultiplier ({}) = armorMultiplier ({})",
+                    creature->GetName(),
+                    creatureDSInfo->selectedLevel,
+                    scaledArmorMultiplier,
+                    armorMultiplier
+        );
 
-            // the armor that the creature would have at its new level
-            // there is no per-expansion adjustment for armor
-            uint32 newArmor = newCreatureBaseStats->GenerateArmor(creatureTemplate);
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | newArmor ({}) = newCreatureBaseStats->GenerateArmor(creatureTemplate)",
-                        creature->GetName(),
-                        creatureDSInfo->selectedLevel,
-                        newArmor
-            );
+        // the original armor of the creature
+        uint32 origArmor = origCreatureBaseStats->GenerateArmor(creatureTemplate);
+        LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | origArmor ({}) = origCreatureBaseStats->GenerateArmor(creatureTemplate)",
+                    creature->GetName(),
+                    creatureDSInfo->selectedLevel,
+                    origArmor
+        );
 
-            // the multiplier that would need to be applied to the creature's original armor to get the new level's armor (before per-player scaling)
-            float newArmorMultiplier = (float)newArmor / (float)origArmor;
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | newArmorMultiplier ({}) = newArmor ({}) / origArmor ({})",
-                        creature->GetName(),
-                        creatureDSInfo->selectedLevel,
-                        newArmorMultiplier,
-                        newArmor,
-                        origArmor
-            );
-
-            // the multiplier that would need to be applied to the creature's original armor to get the new level's armor (after per-player scaling)
-            scaledArmorMultiplier = armorMultiplier * newArmorMultiplier;
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | scaledArmorMultiplier ({}) = armorMultiplier ({}) * newArmorMultiplier ({})",
-                        creature->GetName(),
-                        creatureDSInfo->selectedLevel,
-                        scaledArmorMultiplier,
-                        armorMultiplier,
-                        newArmorMultiplier
-            );
-
-            // the actual armor value to be applied to the level-scaled and player-scaled creature
-            newFinalArmor = round(origArmor * scaledArmorMultiplier);
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | newFinalArmor ({}) = origArmor ({}) * scaledArmorMultiplier ({})",
-                        creature->GetName(),
-                        creatureDSInfo->selectedLevel,
-                        newFinalArmor,
-                        origArmor,
-                        scaledArmorMultiplier
-            );
-        }
-        else
-        {
-            // Scaled armor multiplier is the same as the non-level-scaled armor multiplier
-            scaledArmorMultiplier = armorMultiplier;
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | scaledArmorMultiplier ({}) = armorMultiplier ({})",
-                        creature->GetName(),
-                        creatureDSInfo->selectedLevel,
-                        scaledArmorMultiplier,
-                        armorMultiplier
-            );
-
-            // the original armor of the creature
-            uint32 origArmor = origCreatureBaseStats->GenerateArmor(creatureTemplate);
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | origArmor ({}) = origCreatureBaseStats->GenerateArmor(creatureTemplate)",
-                        creature->GetName(),
-                        creatureDSInfo->selectedLevel,
-                        origArmor
-            );
-
-            // the actual armor value to be applied to the player-scaled creature
-            newFinalArmor = round(origArmor * creatureDSInfo->ArmorMultiplier);
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | newFinalArmor ({}) = origArmor ({}) * creatureDSInfo->ArmorMultiplier ({})",
-                        creature->GetName(),
-                        creatureDSInfo->selectedLevel,
-                        newFinalArmor,
-                        origArmor,
-                        creatureDSInfo->ArmorMultiplier
-            );
-        }
+        // the actual armor value to be applied to the player-scaled creature
+        newFinalArmor = round(origArmor * creatureDSInfo->ArmorMultiplier);
+        LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | newFinalArmor ({}) = origArmor ({}) * creatureDSInfo->ArmorMultiplier ({})",
+                    creature->GetName(),
+                    creatureDSInfo->selectedLevel,
+                    newFinalArmor,
+                    origArmor,
+                    creatureDSInfo->ArmorMultiplier
+        );
 
         //
         //  Damage Scaling
@@ -5877,62 +5199,15 @@ public:
                     creatureDSInfo->DamageMultiplier
         );
 
-        // only level scale damage if level scaling is enabled and the creature level has been altered
-        if (LevelScaling && creatureDSInfo->selectedLevel != creatureDSInfo->UnmodifiedLevel)
-        {
-
-            // the original base damage of the creature
-            // note that we don't mess with the damage modifier here since it applied equally to the original and new levels
-            float origBaseDamage = origCreatureBaseStats->GenerateBaseDamage(creatureTemplate);
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | origBaseDamage ({}) = origCreatureBaseStats->GenerateBaseDamage(creatureTemplate)",
-                        creature->GetName(),
-                        creatureDSInfo->selectedLevel,
-                        origBaseDamage
-            );
-
-            // the base damage of the new creature level for this creature's class
-            // uses a custom smoothing formula to smooth transitions between expansions
-            float newBaseDamage = getBaseExpansionValueForLevel(newCreatureBaseStats->BaseDamage, mapDSInfo->highestPlayerLevel);
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | newBaseDamage ({}) = getBaseExpansionValueForLevel(newCreatureBaseStats->BaseDamage, mapDSInfo->highestPlayerLevel ({}))",
-                        creature->GetName(),
-                        creatureDSInfo->selectedLevel,
-                        newBaseDamage,
-                        mapDSInfo->highestPlayerLevel
-            );
-
-            // the multiplier that would need to be applied to the creature's original damage to get the new level's damage (before per-player scaling)
-            float newDamageMultiplier = newBaseDamage / origBaseDamage;
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | newDamageMultiplier ({}) = newBaseDamage ({}) / origBaseDamage ({})",
-                        creature->GetName(),
-                        creatureDSInfo->selectedLevel,
-                        newDamageMultiplier,
-                        newBaseDamage,
-                        origBaseDamage
-            );
-
-            // the actual multiplier that will be used to scale the creature's damage (after per-player scaling)
-            scaledDamageMultiplier = damageMultiplier * newDamageMultiplier;
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | scaledDamageMultiplier ({}) = damageMultiplier ({}) * newDamageMultiplier ({})",
-                        creature->GetName(),
-                        creatureDSInfo->selectedLevel,
-                        scaledDamageMultiplier,
-                        damageMultiplier,
-                        newDamageMultiplier
-            );
-        }
-        else
-        {
-            // the scaled damage multiplier is the same as the non-level-scaled damage multiplier
-            scaledDamageMultiplier = damageMultiplier;
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | scaledDamageMultiplier ({}) = damageMultiplier ({})",
-                        creature->GetName(),
-                        creatureDSInfo->selectedLevel,
-                        scaledDamageMultiplier,
-                        origCreatureBaseStats->GenerateBaseDamage(creatureTemplate),
-                        damageMultiplier
-            );
-
-        }
+        // the scaled damage multiplier is the same as the non-level-scaled damage multiplier
+        scaledDamageMultiplier = damageMultiplier;
+        LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | scaledDamageMultiplier ({}) = damageMultiplier ({})",
+                    creature->GetName(),
+                    creatureDSInfo->selectedLevel,
+                    scaledDamageMultiplier,
+                    origCreatureBaseStats->GenerateBaseDamage(creatureTemplate),
+                    damageMultiplier
+        );
 
         //
         // Crowd Control Debuff Duration Scaling
@@ -6568,10 +5843,7 @@ public:
             handler->PSendSysMessage("LFG Range: Lvl {} - {} (Target: Lvl {})", mapDSInfo->lfgMinLevel, mapDSInfo->lfgMaxLevel, mapDSInfo->lfgTargetLevel);
 
             // Calculated map level (creature average)
-            handler->PSendSysMessage("Map Level: {}{}",
-                                    (uint8)(mapDSInfo->avgCreatureLevel+0.5f),
-                                    mapDSInfo->isLevelScalingEnabled && mapDSInfo->enabled ? "->" + std::to_string(mapDSInfo->highestPlayerLevel) + " (Level Scaling Enabled)" : " (Level Scaling Disabled)"
-                                    );
+            handler->PSendSysMessage("Map Level: {}", (uint8)(mapDSInfo->avgCreatureLevel+0.5f));
 
             // World Health Multiplier
             handler->PSendSysMessage("World health multiplier: {}", mapDSInfo->worldHealthMultiplier);
