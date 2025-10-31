@@ -147,17 +147,10 @@ public:
     uint32 instancePlayerCount = 0;                 // the number of players this creature has been scaled for
     uint8 selectedLevel = 0;                        // the level that this creature should be set to
 
-    float DamageMultiplier = 1.0f;                  // per-player damage multiplier (no level scaling)
-    float ScaledDamageMultiplier = 1.0f;            // per-player and level scaling damage multiplier
-
-    float HealthMultiplier = 1.0f;                  // per-player health multiplier (no level scaling)
-    float ScaledHealthMultiplier = 1.0f;            // per-player and level scaling health multiplier
-
-    float ManaMultiplier = 1.0f;                    // per-player mana multiplier (no level scaling)
-    float ScaledManaMultiplier = 1.0f;              // per-player and level scaling mana multiplier
-
-    float ArmorMultiplier = 1.0f;                   // per-player armor multiplier (no level scaling)
-    float ScaledArmorMultiplier = 1.0f;             // per-player and level scaling armor multiplier
+    float DamageMultiplier = 1.0f;                  // per-player damage multiplier
+    float HealthMultiplier = 1.0f;                  // per-player health multiplier
+    float ManaMultiplier = 1.0f;                    // per-player mana multiplier
+    float ArmorMultiplier = 1.0f;                   // per-player armor multiplier
 
     float CCDurationMultiplier = 1.0f;              // per-player crowd control duration multiplier (level scaling doesn't affect this)
 
@@ -177,7 +170,6 @@ public:
     // creature->IsSummon()                         // whether or not the creature is a summon
     Creature* summoner = nullptr;                   // the creature that summoned this creature
     std::string summonerName = "";                  // the name of the creature that summoned this creature
-    uint8 summonerLevel = 0;                        // the level of the creature that summoned this creature
     bool isCloneOfSummoner = false;                 // whether or not the creature is a clone of its summoner
 
     Relevance relevance = DUNGEONSCALE_RELEVANCE_UNCHECKED;  // whether or not the creature is relevant for scaling
@@ -1831,7 +1823,6 @@ void AddCreatureToMapCreatureList(Creature* creature, bool addToCreatureList = t
         {
             creatureDSInfo->summoner = creature->ToTempSummon()->GetSummoner()->ToCreature();
             creatureDSInfo->summonerName = creatureDSInfo->summoner->GetName();
-            creatureDSInfo->summonerLevel = creatureDSInfo->summoner->GetLevel();
             Creature* summoner = creatureDSInfo->summoner;
 
             if (!summoner)
@@ -3703,30 +3694,13 @@ class DungeonScale_UnitScript : public UnitScript
             // otherwise, use the source creature's damage multiplier
             else
             {
-                // if this aura damages based on a percent of the player's max health, use the un-level-scaled multiplier
-                if (_isAuraWithEffectType(spellInfo, SPELL_AURA_PERIODIC_DAMAGE_PERCENT))
+                damageMultiplier = source->CustomData.GetDefault<DungeonScaleCreatureInfo>("DungeonScaleCreatureInfo")->DamageMultiplier;
+                if (_debug_damage_and_healing)
                 {
-                    damageMultiplier = source->CustomData.GetDefault<DungeonScaleCreatureInfo>("DungeonScaleCreatureInfo")->DamageMultiplier;
-                    if (_debug_damage_and_healing)
-                    {
-                        LOG_DEBUG("module.DungeonScale_DamageHealingCC", "DungeonScale_UnitScript::_Modify_Damage_Healing: Spell damage based on percent of max health. Ignore level scaling.");
-                        LOG_DEBUG("module.DungeonScale_DamageHealingCC",
-                                "DungeonScale_UnitScript::_Modify_Damage_Healing: Using the source creature's (level-scaling ignored) damage multiplier: ({})",
-                                damageMultiplier
-                        );
-                    }
-                }
-                // non percent-based, used the normal multiplier
-                else
-                {
-                    damageMultiplier = source->CustomData.GetDefault<DungeonScaleCreatureInfo>("DungeonScaleCreatureInfo")->ScaledDamageMultiplier;
-                    if (_debug_damage_and_healing)
-                    {
-                        LOG_DEBUG("module.DungeonScale_DamageHealingCC",
-                                "DungeonScale_UnitScript::_Modify_Damage_Healing: Using the source creature's damage multiplier: ({})",
-                                damageMultiplier
-                        );
-                    }
+                    LOG_DEBUG("module.DungeonScale_DamageHealingCC",
+                            "DungeonScale_UnitScript::_Modify_Damage_Healing: Using the source creature's damage multiplier: ({})",
+                            damageMultiplier
+                    );
                 }
             }
 
@@ -4485,16 +4459,6 @@ public:
             creatureDSInfo->initialMaxHealth = creature->GetMaxHealth();
 
             DungeonScaleCreatureInfo *creatureDSInfo=creature->CustomData.GetDefault<DungeonScaleCreatureInfo>("DungeonScaleCreatureInfo");
-
-            if (creature->GetLevel() != creatureDSInfo->selectedLevel && isCreatureRelevant(creature))
-            {
-                LOG_DEBUG("module.DungeonScale", "DungeonScale_AllCreatureScript::OnCreatureSelectLevel: Creature {} ({}) | is set to level ({}).",
-                            creature->GetName(),
-                            creature->GetLevel(),
-                            creatureDSInfo->selectedLevel
-                );
-                creature->SetLevel(creatureDSInfo->selectedLevel);
-            }
         }
         else
         {
@@ -4516,17 +4480,6 @@ public:
             // final checks on the creature before spawning
             if (isCreatureRelevant(creature))
             {
-                // level check
-                if (creature->GetLevel() != creatureDSInfo->selectedLevel && !creature->IsSummon())
-                {
-                    LOG_DEBUG("module.DungeonScale", "DungeonScale_AllCreatureScript::OnCreatureAddWorld: Creature {} ({}) | is set to level ({}) just after being added to the world.",
-                                creature->GetName(),
-                                creature->GetLevel(),
-                                creatureDSInfo->selectedLevel
-                    );
-                    creature->SetLevel(creatureDSInfo->selectedLevel);
-                }
-
                 // max health check
                 if (creature->GetMaxHealth() != creatureDSInfo->initialMaxHealth)
                 {
@@ -4623,16 +4576,6 @@ public:
             ModifyCreatureAttributes(creature);
 
             DungeonScaleCreatureInfo *creatureDSInfo=creature->CustomData.GetDefault<DungeonScaleCreatureInfo>("DungeonScaleCreatureInfo");
-
-            if (creature->GetLevel() != creatureDSInfo->selectedLevel && isCreatureRelevant(creature))
-            {
-                LOG_DEBUG("module.DungeonScale", "DungeonScale_AllCreatureScript::OnAllCreatureUpdate: Creature {} ({}) | is set to level ({}).",
-                            creature->GetName(),
-                            creature->GetLevel(),
-                            creatureDSInfo->selectedLevel
-                );
-                creature->SetLevel(creatureDSInfo->selectedLevel);
-            }
         }
     }
 
@@ -4696,26 +4639,6 @@ public:
 
             // grab the creature's template and the original creature's stats
             CreatureTemplate const* creatureTemplate = creature->GetCreatureTemplate();
-
-            // set the creature's level
-            if (creature->GetLevel() != unmodifiedLevel)
-            {
-                LOG_DEBUG("module.DungeonScale", "DungeonScale_AllCreatureScript::ResetCreatureIfNeeded: Creature {} ({}) | is set to level ({}).",
-                            creature->GetName(),
-                            creature->GetLevel(),
-                            unmodifiedLevel
-                );
-                creature->SetLevel(unmodifiedLevel);
-                creature->UpdateAllStats();
-            }
-            else
-            {
-                LOG_DEBUG("module.DungeonScale", "DungeonScale_AllCreatureScript::ResetCreatureIfNeeded: Creature {} ({}) | is already set to level ({}).",
-                            creature->GetName(),
-                            creature->GetLevel(),
-                            unmodifiedLevel
-                );
-            }
 
             // get the creature's base stats
             CreatureBaseStats const* origCreatureBaseStats = sObjectMgr->GetCreatureBaseStats(unmodifiedLevel, creatureTemplate->unit_class);
@@ -4969,7 +4892,6 @@ public:
         );
 
         float healthMultiplier = defaultMultiplier * statMod_global * statMod_health;
-        float scaledHealthMultiplier;
 
         LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | HealthMultiplier: ({}) = defaultMultiplier ({}) * statMod_global ({}) * statMod_health ({})",
                     creature->GetName(),
@@ -4995,15 +4917,6 @@ public:
 
         // set the non-level-scaled health multiplier on the creature's DS info
         creatureDSInfo->HealthMultiplier = healthMultiplier;
-
-        // the non-level-scaled health multiplier is the same as the level-scaled health multiplier
-        scaledHealthMultiplier = healthMultiplier;
-        LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | scaledHealthMultiplier ({}) = healthMultiplier ({})",
-                    creature->GetName(),
-                    creatureDSInfo->selectedLevel,
-                    scaledHealthMultiplier,
-                    healthMultiplier
-        );
 
         // the original health of the creature
         uint32 origHealth = origCreatureBaseStats->GenerateHealth(creatureTemplate);
@@ -5032,7 +4945,6 @@ public:
         );
 
         float manaMultiplier = defaultMultiplier * statMod_global * statMod_mana;
-        float scaledManaMultiplier;
 
         LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | ManaMultiplier: ({}) = defaultMultiplier ({}) * statMod_global ({}) * statMod_mana ({})",
                     creature->GetName(),
@@ -5061,7 +4973,6 @@ public:
         {
             manaMultiplier = 0.0f;
             creatureDSInfo->ManaMultiplier = 0.0f;
-            scaledManaMultiplier = 0.0f;
 
             LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | Creature doesn't have mana, multiplier set to ({})",
                         creature->GetName(),
@@ -5078,15 +4989,6 @@ public:
                         creature->GetName(),
                         creatureDSInfo->selectedLevel,
                         creatureDSInfo->ManaMultiplier
-            );
-
-            // scaled mana multiplier is the same as the non-level-scaled mana multiplier
-            scaledManaMultiplier = manaMultiplier;
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | scaledManaMultiplier ({}) = manaMultiplier ({})",
-                        creature->GetName(),
-                        creatureDSInfo->selectedLevel,
-                        scaledManaMultiplier,
-                        manaMultiplier
             );
 
             // the original mana of the creature
@@ -5117,7 +5019,6 @@ public:
         );
 
         float armorMultiplier = defaultMultiplier * statMod_global * statMod_armor;
-        float scaledArmorMultiplier;
 
         LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | armorMultiplier: ({}) = defaultMultiplier ({}) * statMod_global ({}) * statMod_armor ({})",
                     creature->GetName(),
@@ -5130,15 +5031,6 @@ public:
 
         // set the non-level-scaled armor multiplier on the creature's DS info
         creatureDSInfo->ArmorMultiplier = armorMultiplier;
-
-        // Scaled armor multiplier is the same as the non-level-scaled armor multiplier
-        scaledArmorMultiplier = armorMultiplier;
-        LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | scaledArmorMultiplier ({}) = armorMultiplier ({})",
-                    creature->GetName(),
-                    creatureDSInfo->selectedLevel,
-                    scaledArmorMultiplier,
-                    armorMultiplier
-        );
 
         // the original armor of the creature
         uint32 origArmor = origCreatureBaseStats->GenerateArmor(creatureTemplate);
@@ -5167,7 +5059,6 @@ public:
         );
 
         float damageMultiplier = defaultMultiplier * statMod_global * statMod_damage;
-        float scaledDamageMultiplier;
 
         LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | DamageMultiplier: ({}) = defaultMultiplier ({}) * statMod_global ({}) * statMod_damage ({})",
                     creature->GetName(),
@@ -5197,16 +5088,6 @@ public:
                     creature->GetName(),
                     creatureDSInfo->selectedLevel,
                     creatureDSInfo->DamageMultiplier
-        );
-
-        // the scaled damage multiplier is the same as the non-level-scaled damage multiplier
-        scaledDamageMultiplier = damageMultiplier;
-        LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | scaledDamageMultiplier ({}) = damageMultiplier ({})",
-                    creature->GetName(),
-                    creatureDSInfo->selectedLevel,
-                    scaledDamageMultiplier,
-                    origCreatureBaseStats->GenerateBaseDamage(creatureTemplate),
-                    damageMultiplier
         );
 
         //
@@ -5286,10 +5167,6 @@ public:
         creature->SetModifierValue(UNIT_MOD_RAGE, BASE_VALUE, (float)100.0f);
         creature->SetModifierValue(UNIT_MOD_HEALTH, BASE_VALUE, (float)newFinalHealth);
         creature->SetModifierValue(UNIT_MOD_MANA, BASE_VALUE, (float)newFinalMana);
-        creatureDSInfo->ScaledHealthMultiplier = scaledHealthMultiplier;
-        creatureDSInfo->ScaledManaMultiplier = scaledManaMultiplier;
-        creatureDSInfo->ScaledArmorMultiplier = scaledArmorMultiplier;
-        creatureDSInfo->ScaledDamageMultiplier = scaledDamageMultiplier;
         creatureDSInfo->CCDurationMultiplier = ccDurationMultiplier;
 
         // adjust the current health as appropriate
@@ -5416,13 +5293,13 @@ public:
         if (RewardScalingXP || RewardScalingMoney)
         {
             // use health and damage to calculate the average multiplier
-            avgHealthDamageMultipliers = (scaledHealthMultiplier + scaledDamageMultiplier) / 2.0f;
-            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | avgHealthDamageMultipliers ({}) = (scaledHealthMultiplier ({}) + scaledDamageMultiplier ({})) / 2.0f",
+            avgHealthDamageMultipliers = (healthMultiplier + damageMultiplier) / 2.0f;
+            LOG_DEBUG("module.DungeonScale_StatGeneration", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}) | avgHealthDamageMultipliers ({}) = (healthMultiplier ({}) + damageMultiplier ({})) / 2.0f",
                         creature->GetName(),
                         creatureDSInfo->selectedLevel,
                         avgHealthDamageMultipliers,
-                        scaledHealthMultiplier,
-                        scaledDamageMultiplier
+                        healthMultiplier,
+                        damageMultiplier
             );
         }
         else
@@ -5527,18 +5404,14 @@ public:
         // debug log the new stat multipliers stored in CreatureDSInfo in a compact, single-line format
         if (creatureDSInfo->UnmodifiedLevel != creatureDSInfo->selectedLevel)
         {
-            LOG_DEBUG("module.DungeonScale", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}->{}) | Multipliers: H:{:.3f}->{:.3f} M:{:.3f}->{:.3f} A:{:.3f}->{:.3f} D:{:.3f}->{:.3f} CC:{:.3f} XP:{:.3f} $:{:.3f}",
+            LOG_DEBUG("module.DungeonScale", "DungeonScale_AllCreatureScript::ModifyCreatureAttributes: Creature {} ({}->{}) | Multipliers: H:{:.3f} M:{:.3f} A:{:.3f} D:{:.3f} CC:{:.3f} XP:{:.3f} $:{:.3f}",
                     creature->GetName(),
                     creatureDSInfo->UnmodifiedLevel,
                     creatureDSInfo->selectedLevel,
                     creatureDSInfo->HealthMultiplier,
-                    creatureDSInfo->ScaledHealthMultiplier,
                     creatureDSInfo->ManaMultiplier,
-                    creatureDSInfo->ScaledManaMultiplier,
                     creatureDSInfo->ArmorMultiplier,
-                    creatureDSInfo->ScaledArmorMultiplier,
                     creatureDSInfo->DamageMultiplier,
-                    creatureDSInfo->ScaledDamageMultiplier,
                     creatureDSInfo->CCDurationMultiplier,
                     creatureDSInfo->XPModifier,
                     creatureDSInfo->MoneyModifier
@@ -5909,37 +5782,10 @@ public:
                                   isBossOrBossSummon(target) ? " | Boss" : "",
                                   targetDSInfo->isActive ? "Active for Map Stats" : "Ignored for Map Stats");
         handler->PSendSysMessage("Creature difficulty level: {} player(s)", targetDSInfo->instancePlayerCount);
-
-        // summon
-        if (target->IsSummon() && targetDSInfo->summoner && targetDSInfo->isCloneOfSummoner)
-        {
-            handler->PSendSysMessage("Clone of {} ({})", targetDSInfo->summonerName, targetDSInfo->summonerLevel);
-        }
-        else if (target->IsSummon() && targetDSInfo->summoner)
-        {
-            handler->PSendSysMessage("Summon of {} ({})", targetDSInfo->summonerName, targetDSInfo->summonerLevel);
-        }
-        else if (target->IsSummon())
-        {
-            handler->PSendSysMessage("Summon without a summoner.");
-        }
-
-        // level scaled
-        if (targetDSInfo->UnmodifiedLevel != target->GetLevel())
-        {
-            handler->PSendSysMessage("Health multiplier: {} -> {}", targetDSInfo->HealthMultiplier, targetDSInfo->ScaledHealthMultiplier);
-            handler->PSendSysMessage("Mana multiplier: {} -> {}", targetDSInfo->ManaMultiplier, targetDSInfo->ScaledManaMultiplier);
-            handler->PSendSysMessage("Armor multiplier: {}-> {}", targetDSInfo->ArmorMultiplier, targetDSInfo->ScaledArmorMultiplier);
-            handler->PSendSysMessage("Damage multiplier: {} -> {}", targetDSInfo->DamageMultiplier, targetDSInfo->ScaledDamageMultiplier);
-        }
-        // not level scaled
-        else
-        {
-            handler->PSendSysMessage("Health multiplier: {}", targetDSInfo->HealthMultiplier);
-            handler->PSendSysMessage("Mana multiplier: {}", targetDSInfo->ManaMultiplier);
-            handler->PSendSysMessage("Armor multiplier: {}", targetDSInfo->ArmorMultiplier);
-            handler->PSendSysMessage("Damage multiplier: {}", targetDSInfo->DamageMultiplier);
-        }
+        handler->PSendSysMessage("Health multiplier: {}", targetDSInfo->HealthMultiplier);
+        handler->PSendSysMessage("Mana multiplier: {}", targetDSInfo->ManaMultiplier);
+        handler->PSendSysMessage("Armor multiplier: {}", targetDSInfo->ArmorMultiplier);
+        handler->PSendSysMessage("Damage multiplier: {}", targetDSInfo->DamageMultiplier);
         handler->PSendSysMessage("CC Duration multiplier: {}", targetDSInfo->CCDurationMultiplier);
         handler->PSendSysMessage("XP multiplier: {}  Money multiplier: {}", targetDSInfo->XPModifier, targetDSInfo->MoneyModifier);
 
